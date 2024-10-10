@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ChatInterface = ({ onSendMessage, onMakeFlashcards, errorMessage }) => {
+const ChatInterface = ({ onSendMessage, errorMessage }) => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
 

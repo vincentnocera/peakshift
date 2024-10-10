@@ -7,7 +7,7 @@ import Link from 'next/link';
 const CaseSimulation = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, _setErrorMessage] = useState('');
 
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
