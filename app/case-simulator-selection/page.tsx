@@ -11,9 +11,9 @@ const CaseSimulatorSelection = () => {
   const isSelectionComplete = setting && disorder;
 
   return (
-    <div className="page-container">
-      <div className="content-box">
-        <h1 className="heading">Case Simulator Selection</h1>
+    <div className="page-container min-h-screen bg-gray-100 p-8">
+      <div className="content-box max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <h1 className="heading text-3xl font-bold mb-6 text-center">Case Simulator Selection</h1>
         
         <div className="flex justify-between mb-6 space-x-4">
           <div className="w-1/2 relative">
@@ -40,7 +40,7 @@ const CaseSimulatorSelection = () => {
           </div>
 
           <div className="w-1/2 relative">
-            <label className="block text-gray-700 text-xl mb-2 text-center" htmlFor="disorder">
+            <label className="block text-gray-700 text-xl mb-2" htmlFor="disorder">
               Disorders
             </label>
             <div className="relative">
@@ -67,21 +67,24 @@ const CaseSimulatorSelection = () => {
           </div>
         </div>
 
+        <div className="flex justify-center">
         {isSelectionComplete ? (
           <Link
             href={`/case-simulator?setting=${setting}&disorder=${disorder}`}
-            className="btn-primary"
+            className="btn-primary" 
           >
             Start Simulation
           </Link>
         ) : (
-          <span
+          <button
             onClick={() => alert('Please select both a setting and a disorder before starting the simulation.')}
+            disabled
             className="btn-primary"
           >
             Start Simulation
-          </span>
+          </button>
         )}
+        </div>
       </div>
     </div>
   );
@@ -89,3 +92,7 @@ const CaseSimulatorSelection = () => {
 
 // Export the component for use in other parts of the application
 export default CaseSimulatorSelection;
+
+
+
+            // block text-center py-4 text-xl font-semibold rounded-md bg-blue-500 text-white hover:bg-blue-600 transition duration-300"

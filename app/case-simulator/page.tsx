@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react';
-import ChatInterface from '../components/chat-interface';
+import ChatInterface from '../components/chat-interface';  // Update this line
 import Link from 'next/link';
 
 const CaseSimulation = () => {
