@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 
-const ChatInterface = ({ onSendMessage, errorMessage }) => {
-  const [messages, setMessages] = useState([]);
+interface ChatInterfaceProps {
+  onSendMessage: (message: string) => void;
+  errorMessage?: string;
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSendMessage, errorMessage }) => {
+
+    interface Message {
+        text: string;
+        sender: 'user' | 'ai';
+    }
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
 
   const handleSendMessage = () => {
