@@ -13,6 +13,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     api: '/api/chat',
   });
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as React.FormEvent); // Changed from 'any' to 'React.FormEvent'
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto w-full flex flex-col flex-grow">
       <div className="bg-white rounded-lg shadow-md p-6 mb-4 flex-grow overflow-y-auto">
@@ -24,21 +31,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
           </div>
         ))}
       </div>
-      <form onSubmit={handleSubmit} className="flex mb-4">
+      <form onSubmit={handleSubmit} className="flex mb-4 relative">
         <input
           type="text"
           value={input}
           onChange={handleInputChange}
-          className="flex-grow border border-gray-300 rounded-l-md rounded-r-md mr-2 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onKeyDown={handleKeyDown}
+          className="flex-grow border border-gray-300 rounded-md py-2 px-4 pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Type your message here..."
-        />
-        <button
-          type="submit"
-          className="btn-primary"
           disabled={isLoading}
-        >
-          Send
-        </button>
+        />
+        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+          Press ↵ to send
+        </span>
       </form>
     </div>
   );
