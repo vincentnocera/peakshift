@@ -13,7 +13,7 @@ const CaseSimulatorSelection = () => {
   return (
     <div className="page-container min-h-screen bg-gray-100 p-8">
       <div className="content-box max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h1 className="heading text-3xl font-bold mb-6 text-center">Case Simulator Selection</h1>
+        <h1 className="heading-2 mb-6 text-center">Case Simulator Selection</h1>
         
         <div className="flex justify-between mb-6 space-x-4">
           <div className="w-1/2 relative">
@@ -40,7 +40,7 @@ const CaseSimulatorSelection = () => {
           </div>
 
           <div className="w-1/2 relative">
-            <label className="block text-gray-700 text-xl mb-2" htmlFor="disorder">
+            <label className="block text-gray-700 text-xl mb-2 text-center" htmlFor="disorder">
               Disorders
             </label>
             <div className="relative">

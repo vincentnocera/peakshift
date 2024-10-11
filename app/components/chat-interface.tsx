@@ -1,55 +1,45 @@
-import React, { useState } from 'react';
+'use client';
+
+import React from 'react';
+import { useChat } from 'ai/react';
 
 interface ChatInterfaceProps {
-  onSendMessage: (message: string) => void;
-  errorMessage?: string;
+  prompt: string;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSendMessage, errorMessage }) => {
-
-    interface Message {
-        text: string;
-        sender: 'user' | 'ai';
-    }
-
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
-
-  const handleSendMessage = () => {
-    if (inputMessage.trim()) {
-      setMessages([...messages, { text: inputMessage, sender: 'user' }]);
-      onSendMessage(inputMessage);
-      setInputMessage('');
-    }
-  };
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    initialInput: prompt,
+    api: '/api/chat',
+  });
 
   return (
     <div className="max-w-3xl mx-auto w-full flex flex-col flex-grow">
-      {errorMessage && <div className="text-red-500 mb-4 text-center">{errorMessage}</div>}
       <div className="bg-white rounded-lg shadow-md p-6 mb-4 flex-grow overflow-y-auto">
-        {messages.map((message, index) => (
-          <div key={index} className={`mb-4 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-            <span className={`inline-block p-2 rounded-lg ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
-              {message.text}
+        {messages.map((message) => (
+          <div key={message.id} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+            <span className={`inline-block p-2 rounded-lg ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+              {message.content}
             </span>
           </div>
         ))}
       </div>
-      <div className="flex mb-4">
+      <form onSubmit={handleSubmit} className="flex mb-4">
         <input
           type="text"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
+          value={input}
+          onChange={handleInputChange}
           className="flex-grow border border-gray-300 rounded-l-md rounded-r-md mr-2 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Type your message here..."
         />
         <button
-          onClick={handleSendMessage}
-          className="bg-blue-500 text-white py-2 px-6 rounded-r-md rounded-l-md hover:bg-blue-600 transition duration-300"
+          type="submit"
+          className="btn-primary"
+          disabled={isLoading}
         >
           Send
         </button>
-      </div>
+      </form>
     </div>
   );
 };

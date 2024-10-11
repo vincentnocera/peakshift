@@ -1,32 +1,10 @@
 'use client'
 
-import React, { useState } from 'react';
-import ChatInterface from '../components/chat-interface';  // Update this line
+import React from 'react';
+import ChatInterface from '../components/chat-interface';
 import Link from 'next/link';
 
 const CaseSimulation = () => {
-    // Define the type for a message
-    type Message = {
-        text: string;
-        sender: string;
-    };
-
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [inputMessage, setInputMessage] = useState('');
-    const [errorMessage] = useState<string>('');
-
-    const handleSendMessage = () => {
-        if (inputMessage.trim()) {
-            setMessages([...messages, { text: inputMessage, sender: 'user' }]);
-            setInputMessage('');
-            // Here you would typically call an API to get the AI response
-            // For now, we'll just simulate a response
-            setTimeout(() => {
-                setMessages(prev => [...prev, { text: "AI response here", sender: 'ai' }]);
-            }, 1000);
-        }
-    };
-
     const handleMakeFlashcards = () => {
         // Implement flashcard creation logic here
         console.log("Make flashcards");
@@ -35,10 +13,7 @@ const CaseSimulation = () => {
     return (
         <div className="min-h-screen bg-gray-100 p-8 flex flex-col">
             <h1 className="text-4xl font-bold mb-8 text-center">Case Simulation</h1>
-            <ChatInterface 
-                onSendMessage={handleSendMessage}
-                errorMessage={errorMessage}
-            />
+            <ChatInterface prompt="This is a test prompt." />
             <div className="w-full max-w-3xl mx-auto mt-4">
                 <div className="flex justify-between">
                     <button
