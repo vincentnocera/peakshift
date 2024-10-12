@@ -8,10 +8,12 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    initialInput: prompt,
+    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
+    initialMessages: [{ role: 'system', content: prompt, id: 'system' }, {role: 'assistant', content: 'Hello!  Ready to begin?', id: 'assistant' }],
   });
+
+  const displayMessages = messages.filter(message => message.role !== 'system');
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -23,7 +25,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   return (
     <div className="max-w-3xl mx-auto w-full flex flex-col flex-grow">
       <div className="bg-white rounded-lg shadow-md p-6 mb-4 flex-grow overflow-y-auto">
-        {messages.map((message) => (
+        {displayMessages.map((message) => (
           <div key={message.id} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
             <span className={`inline-block p-2 rounded-lg ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
               {message.content}
