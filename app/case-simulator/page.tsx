@@ -14,12 +14,12 @@ const CaseSimulation = () => {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <div className="p-8 flex-grow flex flex-col items-center">
-                <h1 className="mb-8 text-center">Case Simulation</h1>
-                <div className="w-full max-w-3xl flex-grow flex flex-col">
+            <h1 className="text-center p-4">Case Simulation</h1>
+            <div className="flex-grow flex flex-col p-4">
+                <div className="w-full h-full max-w-4xl mx-auto flex-grow flex flex-col">
                     <ChatInterface prompt={caseSimulatorPrompt} />
                 </div>
-                <div className="w-full max-w-3xl mt-4">
+                <div className="w-full max-w-4xl mx-auto mt-4">
                     <div className="flex justify-between">
                         <Button onClick={handleMakeFlashcards} variant="outline">
                             Make Flashcards

@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const userMessages = messages.filter((msg) => msg.role !== 'system');
 
   const result = await streamText({
-    model: anthropic('claude-3-5-sonnet-20240620'),
+    model: anthropic('claude-3-haiku-20240307'),
     system: prompt,
     messages: convertToCoreMessages(userMessages),
     temperature: 1,
