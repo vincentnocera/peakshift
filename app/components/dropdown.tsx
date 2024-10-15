@@ -19,7 +19,7 @@ export default function DynamicSelect({ options, label = "Options", onValueChang
   return (
     <Select onValueChange={onValueChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={`Select ${label}`} />
+        <SelectValue placeholder={`Select ${label}`}/>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

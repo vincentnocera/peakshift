@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import DynamicSelect from "../components/dropdown"; // Updated import path
-
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 // Define the CaseSimulatorSelection component
 const CaseSimulatorSelection = () => {
   const [setting, setSetting] = useState('');
@@ -24,15 +25,14 @@ const CaseSimulatorSelection = () => {
   ];
 
   return (
-    <div className="page-container min-h-screen bg-gray-100 p-8">
-      <div className="content-box max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h1 className="heading-2 mb-6 text-center">Case Simulator Selection</h1>
-        
-        <div className="flex justify-between mb-6 space-x-4">
+    <div className="page-container min-h-screen p-8">
+        <Card className="text-foreground p-8 rounded-lg w-full max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle className="text-center">Case Simulator Selection</CardTitle>
+          </CardHeader>
+          <div className="flex justify-between mb-6 space-x-4">
           <div className="w-1/2 relative">
-            <label className="block text-gray-700 text-xl mb-2 text-center" htmlFor="setting">
-              Setting
-            </label>
+            <CardContent className="text-center">Setting</CardContent>
             <DynamicSelect 
               options={settingOptions} 
               label="Setting" 
@@ -41,10 +41,8 @@ const CaseSimulatorSelection = () => {
           </div>
 
           <div className="w-1/2 relative">
-            <label className="block text-gray-700 text-xl mb-2 text-center" htmlFor="disorder">
-              Disorders
-            </label>
-            <DynamicSelect 
+            <CardContent className="text-center">Disorder</CardContent>
+            <DynamicSelect
               options={disorderOptions} 
               label="Disorder" 
               onValueChange={setDisorder}
@@ -54,22 +52,24 @@ const CaseSimulatorSelection = () => {
 
         <div className="flex justify-center">
         {isSelectionComplete ? (
-          <Link
-            href={`/case-simulator?setting=${setting}&disorder=${disorder}`}
-            className="btn-primary" 
-          >
-            Start Simulation
-          </Link>
+          <Button asChild>
+            <Link
+              href={`/case-simulator?setting=${setting}&disorder=${disorder}`}
+            >
+              Start Simulation
+            </Link>
+          </Button>
         ) : (
-          <button
+          <Button
             onClick={() => alert('Please select both a setting and a disorder before starting the simulation.')}
-            className="btn-primary opacity-50"
+            className="opacity-50"
+            asChild
           >
-            Start Simulation
-          </button>
+            <span>Start Simulation</span>
+          </Button>
         )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

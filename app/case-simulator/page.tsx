@@ -4,7 +4,7 @@ import React from 'react';
 import ChatInterface from '../components/chat-interface';
 import Link from 'next/link';
 import { caseSimulatorPrompt } from '@/lib/prompts/case-simulator-prompt';
-
+import { Button } from "@/components/ui/button"
 const CaseSimulation = () => {
     const handleMakeFlashcards = () => {
         // Implement flashcard creation logic here
@@ -17,17 +17,14 @@ const CaseSimulation = () => {
             <ChatInterface prompt={caseSimulatorPrompt} />
             <div className="w-full max-w-3xl mx-auto mt-4">
                 <div className="flex justify-between">
-                    <button
-                        onClick={handleMakeFlashcards}
-                        className="btn-primary"
-                    >
+                    <Button onClick={handleMakeFlashcards} variant="outline">
                         Make Flashcards
-                    </button>
-                    <Link href="/"
-                        className="btn-primary"
-                    >
-                        Back to Home
-                    </Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                        <Link href="/">
+                            Back to Home
+                        </Link>
+                    </Button>
                 </div>
             </div>
         </div>

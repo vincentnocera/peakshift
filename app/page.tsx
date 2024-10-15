@@ -1,25 +1,29 @@
 import Link from 'next/link';
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center w-full">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto">
-        <h1 className="heading-2 text-center mb-4">Let&apos;s Begin</h1>
+    <div className="min-h-screen flex items-center justify-center w-full">
+      <Card className="text-foreground p-8 rounded-lg w-full max-w-md mx-auto">
+        <CardHeader className="text-center">
+          <CardTitle>Let&apos;s Begin</CardTitle>
+        </CardHeader>
         <div className="flex justify-between space-x-4">
-          <Link 
-            href="/case-simulator-selection"
-            className="btn-primary flex-1"
-          >
-            Case Simulator
-          </Link>
-          <Link
-            href="/under-construction"
-            className="btn-primary flex-1"
-          >
-            Review Literature
-          </Link>
+          <Button asChild className="flex-1">
+            <Link href="/case-simulator-selection">
+              Case Simulator
+            </Link>
+          </Button>
+          <Button asChild className="flex-1">
+            <Link href="/under-construction">
+              Review Literature
+            </Link>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
