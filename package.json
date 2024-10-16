@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.51",
+    "@ai-sdk/openai": "^0.0.67",
     "@radix-ui/react-primitive": "^2.0.0",
     "@radix-ui/react-select": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.0",

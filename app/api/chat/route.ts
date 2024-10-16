@@ -1,5 +1,6 @@
 import {convertToCoreMessages, streamText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+// import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 
 export const maxDuration = 30;
 export const runtime = 'edge';
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
   const userMessages = messages.filter((msg) => msg.role !== 'system');
 
   const result = await streamText({
-    model: anthropic('claude-3-haiku-20240307'),
+    model: openai('gpt-4o-mini'),
     system: prompt,
     messages: convertToCoreMessages(userMessages),
     temperature: 1,
