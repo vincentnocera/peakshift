@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const userMessages = messages.filter((msg) => msg.role !== 'system');
 
   const result = await streamText({
-    model: openai('gpt-4o-mini'),
+    model: openai('gpt-4o'),
     system: prompt,
     messages: convertToCoreMessages(userMessages),
     temperature: 1,

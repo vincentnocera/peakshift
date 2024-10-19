@@ -18,6 +18,9 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Two Sigma Learning",
   description: "Learn medicine effectively with AI",
+  icons: {
+    icon: "./favicon.ico",
+  },
 };
 
 export default function RootLayout({
