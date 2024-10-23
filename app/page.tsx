@@ -17,7 +17,7 @@ const Home = () => {
             </Link>
           </Button>
           <Button asChild className="flex-1">
-            <Link href="/under-construction">
+            <Link href="/pdf-upload">
               Review Literature
             </Link>
           </Button>
