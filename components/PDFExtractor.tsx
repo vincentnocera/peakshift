@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { FileUpload } from "@/components/ui/FileUpload";
 import * as pdfjsLib from "pdfjs-dist";
 import { Button } from "@/components/ui/button";
+import { usePDFContext } from "@/context/PDFContext";
 
 // Set up the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.worker.min.mjs`;
 
 const PDFExtractor: React.FC = () => {
-  const [extractedText, setExtractedText] = useState<string>("");
+  // Get both extractedText and setExtractedText from context
+  const { extractedText, setExtractedText } = usePDFContext();
   const [isLoading, setIsLoading] = useState(false);
   const [fileName, setFileName] = useState<string>("");
 
@@ -20,7 +22,7 @@ const PDFExtractor: React.FC = () => {
 
     try {
       const text = await extractTextFromPDF(file);
-      setExtractedText(text);
+      setExtractedText(text); // Now updating the context instead of local state
     } catch (error) {
       console.error("Error extracting text from PDF:", error);
       setExtractedText("Error extracting text from PDF");
@@ -52,26 +54,25 @@ const PDFExtractor: React.FC = () => {
     navigator.clipboard.writeText(extractedText);
   };
 
+  const handleRemove = () => {
+    setExtractedText("");
+    setFileName("");
+  };
+
   return (
-    <div className="p-4">
+    <div className="p-4 w-1/2">
       <FileUpload onFilesSelected={handleFilesSelected} />
-      {isLoading && <p className="mt-4">Extracting text from PDF...</p>}
-      {extractedText && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">
-            Extracted Text from {fileName}:
-          </h3>
-          <div className="mt-2 p-4 bg-gray-100 rounded-lg shadow">
-            <div className="max-h-96 overflow-y-auto">
-              {extractedText.split("\n").map((line, index) => (
-                <p key={index} className="mb-2">
-                  {line}
-                </p>
-              ))}
-            </div>
-          </div>
-          <Button onClick={handleCopyText} className="mt-4">
-            Copy Text
+      {isLoading && <p className="mt-4 text-muted-foreground">Extracting text from PDF...</p>}
+      {fileName && extractedText && (
+        <div className="mt-4 p-4 bg-secondary rounded-lg border flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-foreground">{fileName}</h3>
+          <Button 
+            onClick={handleRemove} 
+            variant="ghost" 
+            size="sm"
+            className="text-muted-foreground hover:text-destructive"
+          >
+            Remove
           </Button>
         </div>
       )}

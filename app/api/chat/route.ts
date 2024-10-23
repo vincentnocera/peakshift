@@ -1,6 +1,7 @@
 import {convertToCoreMessages, streamText } from 'ai';
 // import { anthropic } from '@ai-sdk/anthropic';
-import { openai } from '@ai-sdk/openai';
+// import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 
 export const maxDuration = 30;
 export const runtime = 'edge';
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
   const userMessages = messages.filter((msg) => msg.role !== 'system');
 
   const result = await streamText({
-    model: openai('gpt-4o'),
+    model: google('gemini-1.5-pro'),
     system: prompt,
     messages: convertToCoreMessages(userMessages),
     temperature: 1,

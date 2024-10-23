@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import DynamicSelect from "../components/dropdown"; // Updated import path
+import DynamicSelect from "../../components/dropdown"; // Updated import path
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 // Define the CaseSimulatorSelection component

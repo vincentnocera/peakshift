@@ -14,7 +14,7 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
-    initialMessages: [{ role: 'system', content: prompt, id: 'system' }, {role: 'assistant', content: 'Hello! Im guided by a placeholder prompt.  Im here so UI can be tested. That being said, how may I help you today?', id: 'assistant' }],
+    initialMessages: [{ role: 'system', content: prompt, id: 'system' }, {role: 'assistant', content: 'Hello! Im how may I help you today?', id: 'assistant' }],
   });
 
   const displayMessages = messages.filter(message => message.role !== 'system');
