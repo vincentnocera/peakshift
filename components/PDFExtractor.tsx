@@ -50,10 +50,6 @@ const PDFExtractor: React.FC = () => {
     return fullText;
   };
 
-  const handleCopyText = () => {
-    navigator.clipboard.writeText(extractedText);
-  };
-
   const handleRemove = () => {
     setExtractedText("");
     setFileName("");
