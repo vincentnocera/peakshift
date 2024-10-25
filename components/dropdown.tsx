@@ -1,4 +1,41 @@
-import React from 'react'
+// import React from 'react'
+// import {
+//   Select,
+//   SelectContent,
+//   SelectGroup,
+//   SelectItem,
+//   SelectLabel,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select"
+
+// interface DynamicSelectProps {
+//   options: string[];
+//   label?: string;
+//   onValueChange: (value: string) => void;
+// }
+
+// export default function DynamicSelect({ options, label = "Options", onValueChange }: DynamicSelectProps) {
+//   return (
+//     <Select onValueChange={onValueChange}>
+//       <SelectTrigger className="w-full">
+//         <SelectValue placeholder={`Select ${label}`}/>
+//       </SelectTrigger>
+//       <SelectContent>
+//         <SelectGroup>
+//           <SelectLabel>{label}</SelectLabel>
+//           {options.map((option) => (
+//             <SelectItem key={option} value={option}>
+//               {option}
+//             </SelectItem>
+//           ))}
+//         </SelectGroup>
+//       </SelectContent>
+//     </Select>
+//   );
+// }
+
+import React from "react";
 import {
   Select,
   SelectContent,
@@ -7,7 +44,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 interface DynamicSelectProps {
   options: string[];
@@ -15,11 +52,19 @@ interface DynamicSelectProps {
   onValueChange: (value: string) => void;
 }
 
-export default function DynamicSelect({ options, label = "Options", onValueChange }: DynamicSelectProps) {
+export default function DynamicSelect({
+  options,
+  label = "Options",
+  onValueChange,
+}: DynamicSelectProps) {
+  const handleValueChange = (value: string) => {
+    onValueChange(value);
+  };
+
   return (
-    <Select onValueChange={onValueChange}>
+    <Select onValueChange={handleValueChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={`Select ${label}`}/>
+        <SelectValue placeholder={`Select ${label}`} />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

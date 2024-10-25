@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { usePDFContext } from "@/context/PDFContext";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 const PDFExtractor = dynamic(() => import("@/components/PDFExtractor"), {
   ssr: false,
@@ -13,9 +14,43 @@ const PDFExtractor = dynamic(() => import("@/components/PDFExtractor"), {
 
 const ExtractPDFPage: React.FC = () => {
   const { extractedText } = usePDFContext();
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Add this console log to debug
-  console.log("Extracted text length:", extractedText?.length);
+  const handleMakeFlashcards = async () => {
+    if (!extractedText) return;
+
+    setIsProcessing(true);
+    try {
+      const response = await fetch("/api/make-flashcards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pdfText: extractedText }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create flashcards");
+      }
+
+      const data = await response.json();
+      console.log(data);
+      toast({
+        title: "Success!",
+        description: "Flashcards have been created and saved.",
+      });
+    } catch (error) {
+      console.error("Error creating flashcards:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create flashcards. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="p-4">
@@ -24,13 +59,20 @@ const ExtractPDFPage: React.FC = () => {
       </CardHeader>
       <div className="flex flex-col items-center gap-4">
         <PDFExtractor />
-        {/* Modify the condition to be more explicit */}
         {extractedText && extractedText.length > 0 && (
-          <Button asChild className="mt-4 w-48" variant="default">
-            <Link href="/literature-review">
-              Start Literature Review
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={handleMakeFlashcards}
+              className="mt-4 w-48"
+              variant="default"
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Creating Flashcards..." : "Create Flashcards"}
+            </Button>
+            <Button asChild className="w-48" variant="outline">
+              <Link href="/literature-review">Start Literature Review</Link>
+            </Button>
+          </div>
         )}
       </div>
     </div>
