@@ -22,6 +22,8 @@ const flashcardsSchema = z.object({
   ),
 });
 
+export const runtime = 'edge' // Add this line to use Edge Runtime
+
 export async function POST(req: Request) {
   try {
     // Get authenticated user
@@ -33,38 +35,61 @@ export async function POST(req: Request) {
     // Get PDF text from request body
     const { pdfText } = await req.json();
 
-    // Generate flashcards using AI SDK
-    const { object } = await generateObject({
-      model: openai("gpt-4o-mini"),
-      schema: flashcardsSchema,
-      schemaName: "MedicalFlashcards",
-      schemaDescription: "Generate medical flashcards from the provided text",
-      prompt: `Create educational medical flashcards from the following text.
-               Focus on key concepts, diagnoses, treatments, and important facts.
-               Make sure each flashcard is concise but comprehensive.
-               Text: ${pdfText}`,
-    });
+    // Add a length check and truncate if necessary
+    const maxLength = 6000; // Adjust this value based on your needs
+    const truncatedText = pdfText.length > maxLength 
+      ? pdfText.slice(0, maxLength) + "..."
+      : pdfText;
 
-    // Store flashcards in Vercel KV
-    const timestamp = Date.now();
-    await kv.hset(`flashcards:${userId}`, {
-      [`deck:${timestamp}`]: {
-        cards: object.flashcards,
-        lastReviewed: null,
-        nextReview: new Date().toISOString(),
-        createdAt: timestamp,
-      },
-    });
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
-    return Response.json({
-      success: true,
-      flashcards: object.flashcards,
-    });
+    try {
+      // Generate flashcards using AI SDK
+      const { object } = await generateObject({
+        model: openai("gpt-4o-mini"), // Use the latest model for better performance
+        schema: flashcardsSchema,
+        schemaName: "MedicalFlashcards",
+        schemaDescription: "Generate medical flashcards from the provided text",
+        prompt: `Create educational medical flashcards from the following text.
+                Focus on key concepts, diagnoses, treatments, and important facts.
+                Limit to 5-10 most important flashcards.
+                Text: ${truncatedText}`,
+      });
+
+      clearTimeout(timeoutId);
+
+      // Store flashcards in chunks if needed
+      const timestamp = Date.now();
+      await kv.hset(`flashcards:${userId}`, {
+        [`deck:${timestamp}`]: {
+          cards: object.flashcards,
+          lastReviewed: null,
+          nextReview: new Date().toISOString(),
+          createdAt: timestamp,
+        },
+      });
+
+      return Response.json({
+        success: true,
+        flashcards: object.flashcards,
+      });
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
   } catch (error) {
     console.error("Error processing PDF:", error);
-    if (error instanceof Error) {
-      return new Response(error.message, { status: 500 });
-    }
-    return new Response("Error processing PDF", { status: 500 });
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Error processing PDF",
+        details: error instanceof Error ? error.stack : undefined 
+      }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }

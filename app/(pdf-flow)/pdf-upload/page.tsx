@@ -22,16 +22,23 @@ const ExtractPDFPage: React.FC = () => {
 
     setIsProcessing(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch("/api/make-flashcards", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ pdfText: extractedText }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error("Failed to create flashcards");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || "Failed to create flashcards");
       }
 
       const data = await response.json();
@@ -44,7 +51,9 @@ const ExtractPDFPage: React.FC = () => {
       console.error("Error creating flashcards:", error);
       toast({
         title: "Error",
-        description: "Failed to create flashcards. Please try again.",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to create flashcards. Please try again.",
         variant: "destructive",
       });
     } finally {
