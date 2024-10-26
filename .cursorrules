@@ -1,0 +1,25 @@
+## Flashcards
+
+Description of MVP of flashcards functionality:
+
+-When user navigates to /flashcards, they are presented one flashcard at a time, starting with the front of the flashcard.
+-User can click on the flashcard to flip it over to the back.
+-The back of the flashcard (in addition to having the answer) will have a green thumbs up button on the bottom right and a red thumbs down button on the bottom left.
+-We will implement a spaced repetition algorithm to make sure the user is shown the flashcards they got wrong sooner than the ones they got right.
+-For example, if a user gets a flashcard right multiple times in a row, the interval between shows will be progressively increase at greater intervals each time.
+-If the user clicks the thumbs down button, this interval between shows of that flashcard will be reset to the initial interval.
+-Information about where each flashcard is in the spaced repetition cycle will be saved in the Vercel KV database along with the flashcard data.
+
+Later on, users will be able to:
+
+-Edit the wording on the flashcards.
+-Delete flashcards.
+-Download flashcards as TSV file (with columns for front and back of flashcard, but no other data).
+
+## Case Simulator
+
+To be described later.
+
+## Literature Review
+
+To be described later.

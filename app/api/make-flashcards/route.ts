@@ -4,23 +4,8 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { kv } from "@vercel/kv";
 import { auth } from "@clerk/nextjs/server";
+import type { CardProgress } from "@/types/flashcards";
 
-// Define the schema for our flashcards
-const flashcardsSchema = z.object({
-  flashcards: z.array(
-    z.object({
-      front: z
-        .string()
-        .describe("The question or prompt side of the flashcard"),
-      back: z
-        .string()
-        .describe("The answer or explanation side of the flashcard"),
-      category: z
-        .string()
-        .describe("The topic category this flashcard belongs to"),
-    }),
-  ),
-});
 
 export const runtime = 'edge' // Add this line to use Edge Runtime
 
@@ -49,12 +34,16 @@ export async function POST(req: Request) {
       // Generate flashcards using AI SDK
       const { object } = await generateObject({
         model: openai("gpt-4o-mini"), // Use the latest model for better performance
-        schema: flashcardsSchema,
+        schema: z.object({
+          flashcards: z.array(z.object({
+            front: z.string(),
+            back: z.string()
+          })),
+        }),
         schemaName: "MedicalFlashcards",
         schemaDescription: "Generate medical flashcards from the provided text",
         prompt: `Create educational medical flashcards from the following text.
                 Focus on key concepts, diagnoses, treatments, and important facts.
-                Limit to 5-10 most important flashcards.
                 Text: ${truncatedText}`,
       });
 
@@ -64,9 +53,11 @@ export async function POST(req: Request) {
       const timestamp = Date.now();
       await kv.hset(`flashcards:${userId}`, {
         [`deck:${timestamp}`]: {
-          cards: object.flashcards,
-          lastReviewed: null,
-          nextReview: new Date().toISOString(),
+          cards: object.flashcards.map(card => ({
+            front: card.front,
+            back: card.back,
+            progress: initializeCardProgress(),
+          })),
           createdAt: timestamp,
         },
       });
@@ -93,3 +84,12 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// Create a function to initialize card progress
+const initializeCardProgress = (): CardProgress => ({
+  interval: 1,
+  easeFactor: 2.5,
+  consecutiveCorrect: 0,
+  lastReviewed: null,
+  nextReview: new Date().toISOString(),
+});
