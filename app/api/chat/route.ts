@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const userMessages = messages.filter((msg) => msg.role !== "system");
 
   const result = await streamText({
-    model: google("gemini-1.5-flash-8b-latest"),
+    model: google("gemini-1.5-flash-latest"),
     system: prompt,
     messages: convertToCoreMessages(userMessages),
     temperature: 1,
