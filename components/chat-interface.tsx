@@ -39,7 +39,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   }, [isLoading]);
 
   return (
-    <Card className="flex flex-col h-full">
+    // Add min-h-[600px] to give a good starting height
+    <Card className="flex flex-col h-full min-h-[600px]">
       <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
         {displayMessages.map((message) => (
           <div 
