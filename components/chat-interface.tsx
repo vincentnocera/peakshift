@@ -40,13 +40,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardContent className="flex-grow overflow-y-auto p-4 min-h-[500px]">
+      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
         {displayMessages.map((message) => (
-          <div key={message.id} className={`mb-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-3 rounded-lg ${
-              message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-            }`}>
-              {message.content}
+          <div 
+            key={message.id} 
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {/* Add whitespace-pre-wrap to preserve message formatting */}
+            <div 
+              className={`max-w-[80%] p-3 rounded-lg break-words ${
+                message.role === 'user' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-secondary text-secondary-foreground'
+              }`}
+            >
+              {message.content.trim()} {/* Add trim() to remove extra whitespace */}
             </div>
           </div>
         ))}
