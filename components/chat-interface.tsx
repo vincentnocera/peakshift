@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatInterfaceProps {
   prompt: string;
@@ -47,7 +48,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
             key={message.id} 
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            {/* Add whitespace-pre-wrap to preserve message formatting */}
             <div 
               className={`max-w-[80%] p-3 rounded-lg break-words ${
                 message.role === 'user' 
@@ -55,7 +55,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
                   : 'bg-secondary text-secondary-foreground'
               }`}
             >
-              {message.content.trim()} {/* Add trim() to remove extra whitespace */}
+              <ReactMarkdown
+                className="prose prose-sm dark:prose-invert"
+                components={{
+                  p: ({ children }) => (
+                    <p className="mb-4 last:mb-0">{children}</p>
+                  ),
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
             </div>
           </div>
         ))}

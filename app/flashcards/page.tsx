@@ -105,7 +105,7 @@ const FlashcardPracticePage: React.FC = () => {
       
       {!currentCard ? (
         <div className="text-center text-lg">
-          No cards due for now! 🎉 Upload PDFs through Literature Review to make more.
+          No cards due for now! 🎉 Upload articles through Literature Review to make more.
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4">
@@ -124,7 +124,7 @@ const FlashcardPracticePage: React.FC = () => {
                 <div
                   style={{
                     transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-                    transition: "transform 0.5s",
+                    transition: "transform 0.2s",
                     transformStyle: "preserve-3d",
                   }}
                   className="absolute w-full h-full"

@@ -42,9 +42,10 @@ export async function POST(req: Request) {
         }),
         schemaName: "MedicalFlashcards",
         schemaDescription: "Generate flashcards from the provided text",
-        prompt: `Create educational flashcards from the following text for physicians to use to study.
+        prompt: `Provided text: ${truncatedText}
+                Create educational flashcards from the provided text for physicians to use to study.  They will be collecting these flashcards for use over a long period of time to reinforce their knowledge.
                 Focus on high yield, discrete pieces of information and key concepts.
-                Text: ${truncatedText}`,
+                Questions should have specific answers which are useful pieces of information for physicians to know.  We are looking for specific useful or important pieces of information, not generalities.`,
       });
 
       clearTimeout(timeoutId);
