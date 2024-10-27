@@ -3,6 +3,8 @@
 import React from "react";
 import { useUser } from "@clerk/nextjs";
 import type { DeckData } from "@/types/flashcards";
+import { CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const FlashcardPracticePage: React.FC = () => {
   const { user } = useUser();
@@ -97,11 +99,13 @@ const FlashcardPracticePage: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-center text-2xl mb-8">Flashcard Practice</h1>
+      <CardHeader className="text-center">
+        <CardTitle>Flashcard Practice</CardTitle>
+      </CardHeader>
       
       {!currentCard ? (
         <div className="text-center text-lg">
-          No cards due for now! 🎉
+          No cards due for now! 🎉 Upload PDFs through Literature Review to make more.
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4">
@@ -145,24 +149,24 @@ const FlashcardPracticePage: React.FC = () => {
                       
                       {/* Add review buttons */}
                       <div className="absolute bottom-4 w-full left-0 flex justify-between px-8">
-                        <button
+                        <Button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleReview(currentCard.deckId, currentCard.cardIndex, false);
                           }}
-                          className="p-2 rounded-full bg-red-500 hover:bg-red-600"
+                          className="outline-button bg-red-500 hover:bg-red-600"
                         >
-                          👎
-                        </button>
-                        <button
+                          Didn&apos;t get it
+                        </Button>
+                        <Button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleReview(currentCard.deckId, currentCard.cardIndex, true);
                           }}
-                          className="p-2 rounded-full bg-green-500 hover:bg-green-600"
+                          className="outline-button bg-green-500 hover:bg-green-600"
                         >
-                          👍
-                        </button>
+                          Got it
+                        </Button> 
                       </div>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
-import { openai } from "@ai-sdk/openai";
-// import { google } from "@ai-sdk/google";
+// import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { kv } from "@vercel/kv";
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     try {
       // Generate flashcards using AI SDK
       const { object } = await generateObject({
-        model: openai("gpt-4o-mini"), // Use the latest model for better performance
+        model: google("gemini-1.5-flash-latest"), // Use the latest model for better performance
         schema: z.object({
           flashcards: z.array(z.object({
             front: z.string(),
@@ -41,9 +41,9 @@ export async function POST(req: Request) {
           })),
         }),
         schemaName: "MedicalFlashcards",
-        schemaDescription: "Generate medical flashcards from the provided text",
-        prompt: `Create educational medical flashcards from the following text.
-                Focus on key concepts, diagnoses, treatments, and important facts.
+        schemaDescription: "Generate flashcards from the provided text",
+        prompt: `Create educational flashcards from the following text for physicians to use to study.
+                Focus on high yield, discrete pieces of information and key concepts.
                 Text: ${truncatedText}`,
       });
 

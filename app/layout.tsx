@@ -39,31 +39,22 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="relative min-h-screen">
-            <header className="absolute top-0 right-0 p-4">
+            <header className="w-full flex items-center justify-between p-4">
+              <div className="flex items-center gap-4">
+                <UserButton />
+                <Button variant="ghost" asChild>
+                  <Link href="/">Home</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/flashcards">Flashcards</Link>
+                </Button>
+              </div>
               <ThemeChanger />
             </header>
             <SignedOut>
               <RedirectToSignIn />
             </SignedOut>
             <SignedIn>
-              {/* Changed from absolute positioning to a full-width header */}
-              <div className="w-full flex items-center p-4">
-                {/* User button on the left */}
-                <UserButton appearance={{
-                  elements: {
-                    button: "mr-4"  // Added margin-right to create space between UserButton and navigation
-                  }
-                }}/>
-                {/* Navigation links on the right */}
-                <div className="flex">
-                  <Button variant="ghost" asChild>
-                    <Link href="/">Home</Link>
-                  </Button>
-                  <Button variant="ghost" asChild>
-                    <Link href="/flashcards">Flashcards</Link>
-                  </Button>
-                </div>
-              </div>
               <main>{children}</main>
             </SignedIn>
           </div>
