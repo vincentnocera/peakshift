@@ -5,11 +5,15 @@ import type { CardProgress, DeckData } from "@/types/flashcards";
 
 // Helper function to calculate next review interval
 const calculateNextReview = (progress: CardProgress, wasCorrect: boolean): CardProgress => {
+  // Set default values if progress is undefined or incomplete
+  const currentEaseFactor = progress?.easeFactor ?? 2.5;  // Default ease factor
+  const currentInterval = progress?.interval ?? 1;
+  const currentConsecutiveCorrect = progress?.consecutiveCorrect ?? 0;
+
   if (!wasCorrect) {
-    // Reset interval on incorrect answer
     return {
       interval: 1,
-      easeFactor: Math.max(1.3, progress.easeFactor - 0.2),
+      easeFactor: Math.max(1.3, currentEaseFactor - 0.2),
       consecutiveCorrect: 0,
       lastReviewed: new Date().toISOString(),
       nextReview: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Next day
@@ -17,13 +21,13 @@ const calculateNextReview = (progress: CardProgress, wasCorrect: boolean): CardP
   }
 
   // Calculate new interval for correct answer
-  const newInterval = progress.interval * progress.easeFactor;
+  const newInterval = currentInterval * currentEaseFactor;
   const nextReviewDate = new Date(Date.now() + newInterval * 24 * 60 * 60 * 1000);
 
   return {
     interval: newInterval,
-    easeFactor: progress.easeFactor + 0.1,
-    consecutiveCorrect: progress.consecutiveCorrect + 1,
+    easeFactor: currentEaseFactor + 0.1,
+    consecutiveCorrect: currentConsecutiveCorrect + 1,
     lastReviewed: new Date().toISOString(),
     nextReview: nextReviewDate.toISOString(),
   };

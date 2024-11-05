@@ -11,6 +11,7 @@ const nextConfig = {
 
     return config;
   },
+  serverExternalPackages: ['@google/generative-ai'],
 };
 
 export default nextConfig;

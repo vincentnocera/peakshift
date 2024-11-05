@@ -15,6 +15,8 @@ const FlashcardPracticePage: React.FC = () => {
     deckId: string;
     cardIndex: number;
   } | null>(null);
+  const [editMode, setEditMode] = React.useState<boolean>(false);
+  const [editedCard, setEditedCard] = React.useState<{ front: string; back: string } | null>(null);
 
   React.useEffect(() => {
     const fetchFlashcards = async () => {
@@ -97,6 +99,58 @@ const FlashcardPracticePage: React.FC = () => {
     }
   };
 
+  // Add this new function inside FlashcardPracticePage component
+  const handleDelete = async (deckId: string, cardIndex: number) => {
+    try {
+      console.log('Attempting to delete - deckId:', deckId, 'cardIndex:', cardIndex);
+      const response = await fetch('/api/delete-flashcard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deckId, cardIndex }),
+      });
+
+      if (response.ok) {
+        // Fetch updated flashcards after deletion
+        const updatedResponse = await fetch('/api/fetch-flashcards');
+        if (updatedResponse.ok) {
+          const data = await updatedResponse.json();
+          setDecks(data);
+          setFlippedCards(new Set());
+          setCurrentCard(findNextDueCard(data));
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting flashcard:', error);
+    }
+  };
+
+  const handleEdit = async (deckId: string, cardIndex: number, updatedCard: { front: string; back: string }) => {
+    try {
+      const response = await fetch('/api/edit-flashcard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deckId, cardIndex, updatedCard }),
+      });
+
+      if (response.ok) {
+        // Fetch updated flashcards after edit
+        const updatedResponse = await fetch('/api/fetch-flashcards');
+        if (updatedResponse.ok) {
+          const data = await updatedResponse.json();
+          setDecks(data);
+          setEditMode(false);
+          setEditedCard(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error editing flashcard:', error);
+    }
+  };
+
   return (
     <div className="p-4">
       <CardHeader className="text-center">
@@ -131,44 +185,163 @@ const FlashcardPracticePage: React.FC = () => {
                 >
                   {/* Front of card */}
                   <div className="absolute w-full h-full backface-hidden p-4 bg-secondary rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="font-bold">Q: {flashcard.front}</p>
-                      <p className="text-sm text-gray-400 mt-4 italic">
-                        Click to reveal answer
-                      </p>
-                    </div>
+                    {editMode ? (
+                      <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                        <textarea
+                          value={editedCard?.front || ''}
+                          onChange={(e) => setEditedCard(prev => ({ ...prev!, front: e.target.value }))}
+                          className="w-full mb-2 p-2 rounded resize-none min-h-[100px]"
+                          placeholder="Question"
+                          style={{ height: 'auto' }}
+                        />
+                        <div className="flex justify-end gap-2 mt-2">
+                          <Button
+                            onClick={() => {
+                              setEditMode(false);
+                              setEditedCard(null);
+                            }}
+                            variant="outline"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              if (currentCard && editedCard) {
+                                handleEdit(currentCard.deckId, currentCard.cardIndex, editedCard);
+                              }
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Delete button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(currentCard.deckId, currentCard.cardIndex);
+                          }}
+                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                          aria-label="Delete flashcard"
+                        >
+                          ✕
+                        </button>
+                        {/* Add edit button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditMode(true);
+                            setEditedCard({
+                              front: flashcard.front,
+                              back: flashcard.back
+                            });
+                          }}
+                          className="absolute top-2 right-8 text-gray-500 hover:text-gray-700"
+                          aria-label="Edit flashcard"
+                        >
+                          ✎
+                        </button>
+                        <div className="text-center">
+                          <p className="font-bold">Q: {flashcard.front}</p>
+                          <p className="text-sm text-gray-400 mt-4 italic">
+                            Click to reveal answer
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Back of card */}
                   <div className="absolute w-full h-full backface-hidden p-4 bg-secondary rounded-lg rotate-y-180 flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="font-bold">A: {flashcard.back}</p>
-                      <p className="text-sm text-gray-400 mt-4 italic">
-                        Click to hide answer
-                      </p>
-                      
-                      {/* Add review buttons */}
-                      <div className="absolute bottom-4 w-full left-0 flex justify-between px-8">
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReview(currentCard.deckId, currentCard.cardIndex, false);
-                          }}
-                          className="outline-button bg-red-500 hover:bg-red-600"
-                        >
-                          Didn&apos;t get it
-                        </Button>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReview(currentCard.deckId, currentCard.cardIndex, true);
-                          }}
-                          className="outline-button bg-green-500 hover:bg-green-600"
-                        >
-                          Got it
-                        </Button> 
+                    {editMode ? (
+                      <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                        <textarea
+                          value={editedCard?.back || ''}
+                          onChange={(e) => setEditedCard(prev => ({ ...prev!, back: e.target.value }))}
+                          className="w-full mb-2 p-2 rounded resize-none min-h-[100px]"
+                          placeholder="Answer"
+                          style={{ height: 'auto' }}
+                        />
+                        <div className="flex justify-end gap-2 mt-2">
+                          <Button
+                            onClick={() => {
+                              setEditMode(false);
+                              setEditedCard(null);
+                            }}
+                            variant="outline"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              if (currentCard && editedCard) {
+                                handleEdit(currentCard.deckId, currentCard.cardIndex, editedCard);
+                              }
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        {/* Delete button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(currentCard.deckId, currentCard.cardIndex);
+                          }}
+                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                          aria-label="Delete flashcard"
+                        >
+                          ✕
+                        </button>
+                        {/* Add edit button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditMode(true);
+                            setEditedCard({
+                              front: flashcard.front,
+                              back: flashcard.back
+                            });
+                          }}
+                          className="absolute top-2 right-8 text-gray-500 hover:text-gray-700"
+                          aria-label="Edit flashcard"
+                        >
+                          ✎
+                        </button>
+                        <div className="text-center">
+                          <p className="font-bold">A: {flashcard.back}</p>
+                          <p className="text-sm text-gray-400 mt-4 italic">
+                            Click to hide answer
+                          </p>
+                          {/* Review buttons remain unchanged */}
+                          <div className="absolute bottom-4 w-full left-0 flex justify-between px-8">
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReview(currentCard.deckId, currentCard.cardIndex, false);
+                              }}
+                              className="outline-button bg-red-500 hover:bg-red-600"
+                            >
+                              Didn&apos;t get it
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReview(currentCard.deckId, currentCard.cardIndex, true);
+                              }}
+                              className="outline-button bg-green-500 hover:bg-green-600"
+                            >
+                              Got it
+                            </Button> 
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

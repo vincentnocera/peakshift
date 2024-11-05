@@ -1,7 +1,5 @@
 import { convertToCoreMessages, streamText } from "ai";
-// import { anthropic } from '@ai-sdk/anthropic';
-// import { openai } from '@ai-sdk/openai';
-import { google } from "@ai-sdk/google";
+import { anthropic } from '@ai-sdk/anthropic';
 
 export const maxDuration = 30;
 export const runtime = "edge";
@@ -21,10 +19,23 @@ export async function POST(req: Request) {
   // Filter out the system message from the messages array
   const userMessages = messages.filter((msg) => msg.role !== "system");
 
+  // Create a new array with system message that includes cache control
+  const messagesWithCache = [
+    {
+      role: 'system' as const,
+      content: prompt,
+      experimental_providerMetadata: {
+        anthropic: { cacheControl: { type: 'ephemeral' } }
+      }
+    },
+    ...userMessages
+  ];
+
   const result = await streamText({
-    model: google("gemini-1.5-flash-002"),
-    system: prompt,
-    messages: convertToCoreMessages(userMessages),
+    model: anthropic('claude-3-5-sonnet-20241022', {
+      cacheControl: true
+    }),
+    messages: convertToCoreMessages(messagesWithCache),
     temperature: 1,
   });
 
