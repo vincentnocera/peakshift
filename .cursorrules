@@ -16,9 +16,108 @@ Later on, users will be able to:
 -Delete flashcards.
 -Download flashcards as TSV file (with columns for front and back of flashcard, but no other data).
 
-## Case Simulator
 
-To be described later.
+# Case Material Management System Specification
+
+## Database Schema (Vercel KV)
+
+### Articles
+{
+  "articles": {
+    "article:<uuid>": {
+      "id": "uuid",
+      "text": "string", 
+      "specialty": "string",
+      "subtopic": "string",
+      "dateAdded": "ISO timestamp"
+    }
+  }
+}
+
+### Specialties and Subtopics
+{
+  "specialties": {
+    "specialty:<name>": {
+      "name": "string",
+      "subtopics": ["string"]
+    }
+  }
+}
+
+## Key Features
+
+### 1. Admin Article Management Interface
+- Protected route `/admin/articles`
+- Only accessible to users with admin role in Clerk
+- Features:
+  - Add new article form with:
+    - Text input (large text area)
+    - Specialty dropdown (existing or new)
+    - Subtopic dropdown (existing or new)
+  - List of existing articles with delete capability
+  - No edit functionality required initially
+
+### 2. Case Simulation Selection
+- Enhanced version of existing `/case-simulation-selection` page
+- Two-tier dropdown system:
+  1. Specialty dropdown
+  2. Subtopic dropdown (enabled after specialty selection)
+- Multiple subtopic selection capability
+- "Select All" option for subtopics
+- Random selection from chosen subtopics when simulation starts
+
+### 3. Article Integration with LLM
+- Selected article text will be incorporated into the LLM prompt
+- No tracking of previously used articles needed
+
+## API Endpoints
+
+### Admin Routes
+POST /api/articles
+- Add new article
+- Requires admin role
+
+DELETE /api/articles/:id
+- Delete article
+- Requires admin role
+
+GET /api/specialties
+- Get list of all specialties and subtopics
+- Public route
+
+POST /api/specialties
+- Add new specialty
+- Requires admin role
+
+POST /api/subtopics
+- Add new subtopic to specialty
+- Requires admin role
+
+### Public Routes
+GET /api/articles/random
+- Get random article based on selected specialty/subtopics
+- Public route
+
+## Implementation Phases
+
+1. Database Setup
+   - Set up Vercel KV schemas
+   - Create helper functions for article/specialty management
+
+2. Admin Interface
+   - Implement admin role checking with Clerk
+   - Create protected admin routes
+   - Build article management UI
+
+3. Case Simulation Enhancement
+   - Modify selection page to include new dropdown system
+   - Implement random article selection
+   - Integrate selected article with LLM prompt
+
+4. Testing & Deployment
+   - Test admin functionality
+   - Test case simulation with new article system
+   - Deploy to production
 
 ## Literature Review
 

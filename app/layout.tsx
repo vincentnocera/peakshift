@@ -6,6 +6,7 @@ import { ThemeChanger } from "@/components/ui/theme-changer";
 import { ClerkProvider, SignedIn, SignedOut, UserButton, RedirectToSignIn } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Toaster } from "@/components/ui/toaster"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -59,6 +60,7 @@ export default function RootLayout({
             </SignedIn>
           </div>
         </ThemeProvider>
+        <Toaster />
         </body>
       </html>
     </ClerkProvider>
