@@ -5,7 +5,7 @@ import { useChat } from 'ai/react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Mic } from 'lucide-react';
+import { Send, Mic, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface ChatInterfaceProps {
@@ -31,7 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   };
 
   const { messages: rawMessages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat-experimental',
+    api: '/api/chat',
     initialMessages: [
       { role: 'system', content: prompt, id: 'system' },
       { role: 'assistant', content: 'Hello, ready to get started?', id: 'assistant' }
@@ -54,9 +54,37 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Modify handleSubmit to stop recording
+  const handleFormSubmit = (e: React.FormEvent) => {
+    // Stop any ongoing recording
+    if (isRecording && mediaRecorder) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      if (recordingTimeout.current) {
+        clearTimeout(recordingTimeout.current);
+      }
+      // Clean up the media stream
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+    // Call the original handleSubmit
+    handleSubmit(e);
+  };
+
+  // Update the form and keyboard handler to use the new submit function
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      // Stop any ongoing recording first
+      if (isRecording && mediaRecorder) {
+        mediaRecorder.stop();
+        setIsRecording(false);
+        if (recordingTimeout.current) {
+          clearTimeout(recordingTimeout.current);
+        }
+        // Clean up the media stream
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+      // Submit the form
       handleSubmit(e as React.FormEvent);
     }
   };
@@ -78,12 +106,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
 
   // Add new function to handle recording
   const handleRecording = async () => {
+    // Immediately blur the button to prevent it from catching Enter key
+    (document.activeElement as HTMLElement)?.blur();
+    
     if (isRecording) {
       mediaRecorder?.stop();
       setIsRecording(false);
       if (recordingTimeout.current) {
         clearTimeout(recordingTimeout.current);
       }
+      // Clean up the media stream
+      if (mediaRecorder) {
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+      // Focus the text input after stopping recording
+      inputRef.current?.focus();
     } else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -159,6 +196,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     }
   };
 
+  // Add this new function to check if the latest message has displayable content
+  const hasDisplayableContent = (content: string) => {
+    // If there's any content after removing teaching strategy tags, we have displayable content
+    return cleanMessageContent(content).trim().length > 0;
+  };
+
+  // Add state to track if we should show the loading indicator
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+
+  // Update loading indicator whenever messages or loading state changes
+  useEffect(() => {
+    if (!isLoading) {
+      setShowLoadingIndicator(false);
+    } else {
+      const latestMessage = rawMessages[rawMessages.length - 1];
+      if (latestMessage?.role === 'assistant') {
+        // Only show loading if there's no displayable content yet
+        setShowLoadingIndicator(!hasDisplayableContent(latestMessage.content));
+      } else {
+        setShowLoadingIndicator(true);
+      }
+    }
+  }, [isLoading, rawMessages]);
+
   return (
     // Add min-h-[600px] to give a good starting height
     <Card className="flex flex-col h-full min-h-[600px]">
@@ -188,10 +249,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
             </div>
           </div>
         ))}
+        {showLoadingIndicator && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] p-3 rounded-lg break-words bg-secondary text-secondary-foreground">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </CardContent>
       <CardFooter className="p-4">
-        <form onSubmit={handleSubmit} className="flex w-full">
+        <form onSubmit={handleFormSubmit} className="flex w-full">
           <div className="relative flex-grow">
             <Textarea
               ref={inputRef}
@@ -208,7 +279,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
                 type="button"
                 size="icon"
                 onClick={handleRecording}
+                disabled={isLoading}
                 className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                }}
               >
                 <Mic className="h-5 w-5" />
               </Button>

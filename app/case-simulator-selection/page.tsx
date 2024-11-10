@@ -51,7 +51,7 @@ const CaseSimulatorSelection = () => {
   }, [selectAll]);
 
   return (
-    <div className="page-container min-h-screen p-8">
+    <div className="min-h-screen flex items-center justify-center w-full p-8">
       <Card className="text-foreground p-8 rounded-lg w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle className="text-center">

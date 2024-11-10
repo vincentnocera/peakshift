@@ -39,8 +39,8 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="relative min-h-screen">
-            <header className="w-full flex items-center justify-between p-3">
-              <div className="flex items-center gap-1">
+            <header className="w-full flex items-center justify-between p-3 sticky top-0 bg-background z-10">
+              <div className="flex items-center gap-1" >
                 <UserButton />
                 <Button variant="ghost" asChild>
                   <Link href="/">Home</Link>

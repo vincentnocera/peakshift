@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     // Pass the file directly to Groq
     const transcription = await groq.audio.transcriptions.create({
       file: audioFileForGroq,
-      model: 'whisper-large-v3',
+      model: 'whisper-large-v3-turbo',
       response_format: 'text',
     });
 
