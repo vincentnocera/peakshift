@@ -31,7 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   };
 
   const { messages: rawMessages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+    api: '/api/chat-openai',
     initialMessages: [
       { role: 'system', content: prompt, id: 'system' },
       { role: 'assistant', content: 'Hello, ready to get started?', id: 'assistant' }
@@ -237,10 +237,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
               }`}
             >
               <ReactMarkdown
-                className="prose prose-sm dark:prose-invert"
+                className="prose prose-sm dark:prose-invert space-y-4"
                 components={{
                   p: ({ children }) => (
-                    <p className="mb-4 last:mb-0">{children}</p>
+                    <p className="mb-6 last:mb-0">{children}</p>
+                  ),
+                  h1: ({ children }) => (
+                    <h1 className="mt-8 mb-4">{children}</h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="mt-8 mb-4">{children}</h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="mt-8 mb-4">{children}</h3>
                   ),
                 }}
               >

@@ -25,7 +25,7 @@ export function SpecialtyManager() {
   };
 
   const handleDeleteSpecialty = async (specialtyName: string) => {
-    if (!confirm(`Delete specialty "${specialtyName}" and all its subtopics?`)) return;
+    // if (!confirm(`Delete specialty "${specialtyName}" and all its subtopics?`)) return;
     
     const response = await fetch('/api/delete-specialty', {
       method: 'DELETE',
@@ -42,7 +42,7 @@ export function SpecialtyManager() {
   };
 
   const handleDeleteSubtopic = async (specialtyName: string, subtopicName: string) => {
-    if (!confirm(`Delete subtopic "${subtopicName}"?`)) return;
+    // if (!confirm(`Delete subtopic "${subtopicName}"?`)) return;
     
     const response = await fetch('/api/delete-subtopic', {
       method: 'DELETE',

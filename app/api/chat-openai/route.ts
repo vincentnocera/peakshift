@@ -1,7 +1,5 @@
 import { convertToCoreMessages, streamText } from "ai";
-// import { anthropic } from '@ai-sdk/anthropic';
-// import { openai } from '@ai-sdk/openai';
-import { google } from "@ai-sdk/google";
+import { openai } from '@ai-sdk/openai';
 
 export const maxDuration = 30;
 export const runtime = "edge";
@@ -21,10 +19,15 @@ export async function POST(req: Request) {
   // Filter out the system message from the messages array
   const userMessages = messages.filter((msg) => msg.role !== "system");
 
+  // Create a new array with system message (simplified without cache control)
+  const messagesWithSystem = [
+    { role: 'system' as const, content: prompt },
+    ...userMessages
+  ];
+
   const result = await streamText({
-    model: google("gemini-1.5-flash-002"),
-    system: prompt,
-    messages: convertToCoreMessages(userMessages),
+    model: openai('gpt-4o'),
+    messages: convertToCoreMessages(messagesWithSystem),
     temperature: 1,
   });
 
