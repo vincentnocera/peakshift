@@ -20,7 +20,8 @@ export async function DELETE(request: Request) {
     await kv.del(`specialty:${name}`);
     
     return NextResponse.json({ message: 'Specialty deleted successfully' });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Error deleting specialty:', error);
     return NextResponse.json(
       { error: 'Failed to delete specialty' },
       { status: 500 }

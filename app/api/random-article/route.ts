@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     
     // Filter articles based on specialty and subtopics
     const matchingArticles = Object.entries(articles)
-      .map(([id, article]) => ({ id, ...article }))
+      .map(([, article]) => article)
       .filter(article => 
         article.specialty === specialty && 
         subtopics.includes(article.subtopic)

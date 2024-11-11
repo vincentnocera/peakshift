@@ -35,7 +35,8 @@ export async function DELETE(request: Request) {
     await kv.set(`specialty:${specialtyName}`, specialty);
     
     return NextResponse.json({ message: 'Subtopic deleted successfully' });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Error deleting subtopic:', error);
     return NextResponse.json(
       { error: 'Failed to delete subtopic' },
       { status: 500 }

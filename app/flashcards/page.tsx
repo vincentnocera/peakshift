@@ -159,7 +159,7 @@ const FlashcardPracticePage: React.FC = () => {
       
       {!currentCard ? (
         <div className="text-center text-lg">
-          No cards due for now! 🎉 Upload articles through Literature Review to make more.
+          Flashcards are under construction! 🎉 Check back soon!
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4">
