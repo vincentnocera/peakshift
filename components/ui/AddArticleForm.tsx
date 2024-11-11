@@ -137,6 +137,18 @@ export function AddArticleForm({ onArticleAdded }: AddArticleFormProps) {
     }
   };
 
+  // Add this helper function to check if form is valid
+  const isFormValid = () => {
+    const finalSpecialty = specialty === "new" ? newSpecialty : specialty;
+    const finalSubtopic = subtopic === "new" ? newSubtopic : subtopic;
+    return (
+      finalSpecialty &&
+      finalSubtopic &&
+      text.length > 0 &&
+      text.length <= 80000
+    );
+  };
+
   return (
     <form 
       onSubmit={handleSubmit} 
@@ -219,18 +231,30 @@ export function AddArticleForm({ onArticleAdded }: AddArticleFormProps) {
       {/* Article Text */}
       <div>
         <label className="block mb-2">Article Text</label>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          className="w-full p-2 border rounded h-48"
-          placeholder="Enter article text..."
-        />
+        <div className="relative">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="w-full p-2 border rounded h-48"
+            placeholder="Enter article text..."
+          />
+          <span className={`absolute bottom-2 right-2 text-sm ${
+            text.length > 80000 ? 'text-red-500' : 'text-gray-500'
+          }`}>
+            {text.length}/80000
+          </span>
+        </div>
       </div>
 
       <button
         type="button"
         onClick={handleSubmit}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        disabled={!isFormValid()}
+        className={`px-4 py-2 rounded ${
+          isFormValid()
+            ? 'bg-blue-500 text-white hover:bg-blue-600'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        }`}
       >
         Add Article
       </button>

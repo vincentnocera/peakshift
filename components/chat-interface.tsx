@@ -31,7 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   };
 
   const { messages: rawMessages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat-experimental',
+    api: '/api/chat',
     initialMessages: [
       { role: 'system', content: prompt, id: 'system' },
       { role: 'assistant', content: 'Hello, ready to get started?', id: 'assistant' }
