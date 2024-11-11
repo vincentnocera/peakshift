@@ -1,19 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Specialty {
   name: string;
   subtopics: string[];
 }
 
-export function AddArticleForm() {
+interface AddArticleFormProps {
+  onArticleAdded?: () => void;
+}
+
+export function AddArticleForm({ onArticleAdded }: AddArticleFormProps) {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [specialty, setSpecialty] = useState("");
   const [newSpecialty, setNewSpecialty] = useState("");
   const [subtopic, setSubtopic] = useState("");
   const [newSubtopic, setNewSubtopic] = useState("");
   const [text, setText] = useState("");
+
+  const { toast } = useToast();
 
   // Fetch specialties on mount
   useEffect(() => {
@@ -85,14 +92,24 @@ export function AddArticleForm() {
     });
 
     if (response.ok) {
+      // Show success toast
+      toast({ description: "Article added successfully" });
+      
       // Reset form
       setText("");
       setSpecialty("");
       setNewSpecialty("");
       setSubtopic("");
       setNewSubtopic("");
+      
+      // Trigger article list refresh
+      onArticleAdded?.();
     } else {
-      // Handle error case
+      // Show error toast
+      toast({ 
+        variant: "destructive", 
+        description: "Failed to add article" 
+      });
       console.error('Failed to add article');
     }
   };

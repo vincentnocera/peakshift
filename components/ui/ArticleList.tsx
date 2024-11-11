@@ -37,8 +37,6 @@ export function ArticleList() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this article?')) return;
-
     try {
       const response = await fetch(`/api/delete-article`, {
         method: 'DELETE',
@@ -72,28 +70,28 @@ export function ArticleList() {
       {articles.map((article) => (
         <div 
           key={article.id} 
-          className="border rounded-lg p-4 bg-white shadow-sm"
+          className="border rounded-lg p-4 bg-background shadow-sm"
         >
           <div className="flex justify-between items-start mb-2">
             <div>
-              <h3 className="font-semibold">{article.specialty}</h3>
-              <p className="text-sm text-gray-600">{article.subtopic}</p>
+              <h3 className="font-semibold text-foreground">{article.specialty}</h3>
+              <p className="text-sm text-muted-foreground">{article.subtopic}</p>
             </div>
             <button
               onClick={() => handleDelete(article.id)}
-              className="text-red-600 hover:text-red-800 text-sm"
+              className="text-destructive hover:text-destructive/90 text-sm"
             >
               Delete
             </button>
           </div>
           
           {/* Preview of the article text (first 200 characters) */}
-          <p className="text-gray-700 text-sm">
+          <p className="text-muted-foreground text-sm">
             {article.text.slice(0, 200)}
             {article.text.length > 200 ? '...' : ''}
           </p>
           
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted-foreground/60 mt-2">
             Added: {new Date(article.dateAdded).toLocaleDateString()}
           </p>
         </div>

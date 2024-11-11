@@ -10,45 +10,69 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// Define the CaseSimulatorSelection component
-const CaseSimulatorSelection = () => {
-  const [selectedDisorders, setSelectedDisorders] = useState<string[]>([]);
 
-  const handleDisorderToggle = (disorder: string) => {
-    setSelectedDisorders((current) =>
-      current.includes(disorder)
-        ? current.filter((d) => d !== disorder)
-        : [...current, disorder],
+interface Specialty {
+  name: string;
+  subtopics: string[];
+}
+
+const CaseSimulatorSelection = () => {
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
+  const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
+  const [openSpecialty, setOpenSpecialty] = useState(false);
+  const [openSubtopics, setOpenSubtopics] = useState(false);
+
+  // Fetch specialties on mount
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      const response = await fetch('/api/get-specialties');
+      if (response.ok) {
+        const data = await response.json();
+        setSpecialties(data.specialties);
+      }
+    };
+    fetchSpecialties();
+  }, []);
+
+  // When specialty is selected, automatically select all its subtopics
+  useEffect(() => {
+    if (selectedSpecialty) {
+      const specialty = specialties.find(s => s.name === selectedSpecialty);
+      if (specialty) {
+        setSelectedSubtopics(specialty.subtopics);
+      }
+    } else {
+      setSelectedSubtopics([]);
+    }
+  }, [selectedSpecialty, specialties]);
+
+  const handleSpecialtySelect = (specialty: string) => {
+    setSelectedSpecialty(specialty);
+  };
+
+  const handleSubtopicToggle = (subtopic: string) => {
+    setSelectedSubtopics((current) =>
+      current.includes(subtopic)
+        ? current.filter((s) => s !== subtopic)
+        : [...current, subtopic]
     );
   };
 
-  const isSelectionComplete = selectedDisorders.length > 0;
+  const currentSpecialty = specialties.find(s => s.name === selectedSpecialty);
+  const subtopicOptions = currentSpecialty?.subtopics || [];
 
-  // Define options for the dropdown
-  const disorderOptions = [
-    "Substance Use",
-    "Psychosis",
-    "Bipolarity",
-    "Unipolar Depression",
-    "Anxiety",
-    "Eating Disorders",
-  ];
+  const selectAllSubtopics = useCallback(() => {
+    if (currentSpecialty) {
+      setSelectedSubtopics(currentSpecialty.subtopics);
+    }
+  }, [currentSpecialty]);
 
-  const [open, setOpen] = useState(false);
-
-  // Wrap selectAll in useCallback to memoize it
-  const selectAll = useCallback(() => {
-    setSelectedDisorders(disorderOptions);
-  }, []);
-
-  const deselectAll = () => {
-    setSelectedDisorders([]);
+  const deselectAllSubtopics = () => {
+    setSelectedSubtopics([]);
   };
 
-  // Initialize with all disorders selected
-  useEffect(() => {
-    selectAll();
-  }, [selectAll]);
+  const isSelectionComplete = selectedSpecialty && selectedSubtopics.length > 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center w-full p-8">
@@ -59,35 +83,65 @@ const CaseSimulatorSelection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <DropdownMenu open={open} onOpenChange={setOpen}>
+          {/* Specialty Dropdown */}
+          <DropdownMenu open={openSpecialty} onOpenChange={setOpenSpecialty}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="w-full">
-                Select Disorders
+                {selectedSpecialty || "Select Specialty"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               className="w-56"
               align="start"
-              onPointerLeave={() => setOpen(false)}
+              onPointerLeave={() => setOpenSpecialty(false)}
+            >
+              {specialties.map((specialty) => (
+                <DropdownMenuCheckboxItem
+                  key={specialty.name}
+                  checked={selectedSpecialty === specialty.name}
+                  onCheckedChange={() => handleSpecialtySelect(specialty.name)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  {specialty.name}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Subtopics Dropdown */}
+          <DropdownMenu open={openSubtopics} onOpenChange={setOpenSubtopics}>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                disabled={!selectedSpecialty}
+              >
+                Select Subtopics
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-56"
+              align="start"
+              onPointerLeave={() => setOpenSubtopics(false)}
             >
               <DropdownMenuCheckboxItem
-                checked={selectedDisorders.length === disorderOptions.length}
+                checked={selectedSubtopics.length === subtopicOptions.length}
                 onCheckedChange={(checked) =>
-                  checked ? selectAll() : deselectAll()
+                  checked ? selectAllSubtopics() : deselectAllSubtopics()
                 }
                 className="border-b"
                 onSelect={(e) => e.preventDefault()}
               >
                 Select All
               </DropdownMenuCheckboxItem>
-              {disorderOptions.map((disorder) => (
+              {subtopicOptions.map((subtopic) => (
                 <DropdownMenuCheckboxItem
-                  key={disorder}
-                  checked={selectedDisorders.includes(disorder)}
-                  onCheckedChange={() => handleDisorderToggle(disorder)}
+                  key={subtopic}
+                  checked={selectedSubtopics.includes(subtopic)}
+                  onCheckedChange={() => handleSubtopicToggle(subtopic)}
                   onSelect={(e) => e.preventDefault()}
                 >
-                  {disorder}
+                  {subtopic}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -97,7 +151,7 @@ const CaseSimulatorSelection = () => {
           {isSelectionComplete ? (
             <Button asChild>
               <Link
-                href={`/case-simulator?disorders=${selectedDisorders.join(",")}`}
+                href={`/case-simulator?specialty=${selectedSpecialty}&subtopics=${selectedSubtopics.join(",")}`}
               >
                 Start Simulation
               </Link>
@@ -106,7 +160,7 @@ const CaseSimulatorSelection = () => {
             <Button
               onClick={() =>
                 alert(
-                  "Please select at least one disorder before starting the simulation.",
+                  "Please select a specialty and at least one subtopic before starting the simulation.",
                 )
               }
               className="opacity-50"
@@ -121,7 +175,4 @@ const CaseSimulatorSelection = () => {
   );
 };
 
-// Export the component for use in other parts of the application
 export default CaseSimulatorSelection;
-
-// block text-center py-4 text-xl font-semibold rounded-md bg-blue-500 text-white hover:bg-blue-600 transition duration-300"

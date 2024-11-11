@@ -1,9 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import { AddArticleForm } from "@/components/ui/AddArticleForm";
 import { ArticleList } from "@/components/ui/ArticleList";
 import { SpecialtyManager } from "@/components/ui/SpecialtyManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminPage() {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleArticleAdded = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <Tabs defaultValue="articles">
@@ -14,8 +23,8 @@ export default function AdminPage() {
         
         <TabsContent value="articles">
           <div className="space-y-8">
-            <AddArticleForm />
-            <ArticleList />
+            <AddArticleForm onArticleAdded={handleArticleAdded} />
+            <ArticleList key={refreshTrigger} />
           </div>
         </TabsContent>
         
