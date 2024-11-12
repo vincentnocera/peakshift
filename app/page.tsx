@@ -1,30 +1,22 @@
 'use client';
 
-import { useUser } from '@clerk/clerk-react';
+import { useUser } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
 
-const Home = () => {
-  const { isLoaded, isSignedIn, user } = useUser();
+export default function Home() {
+  // We don't need to check isSignedIn because the layout's <SignedOut> 
+  // component already handles redirecting to sign in
+  const { isLoaded, user } = useUser();
 
   // Wait for the user data to load
   if (!isLoaded) {
-    return null; // or a loading spinner
+    return null;
   }
 
-  // Check if user is signed in
-  if (!isSignedIn) {
-    redirect('/sign-in');
-  }
-
-  // Now we can safely access user properties
-  console.log('User ID:', user?.id);
-  console.log('User Role:', user?.publicMetadata?.role);
-
+  // Check user role and redirect accordingly
   if (user?.publicMetadata?.role === "therapist") {
     redirect("/therapy-tutorials");
   } else {
     redirect("/case-simulator-selection");
   }
-};
-
-export default Home;
+}
