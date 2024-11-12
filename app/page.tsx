@@ -1,32 +1,30 @@
-// import Link from 'next/link';
-// import { Button } from "@/components/ui/button"
-// import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+'use client';
+
+import { useUser } from '@clerk/clerk-react';
 import { redirect } from 'next/navigation';
 
-
 const Home = () => {
-  redirect("/case-simulator-selection");
-  // return (
-    // <div className="min-h-screen flex items-center justify-center w-full">
-    //   <Card className="text-foreground p-8 rounded-lg w-full max-w-md mx-auto">
-    //     <CardHeader className="text-center">
-    //       <CardTitle>Let&apos;s Begin</CardTitle>
-    //     </CardHeader>
-    //     <div className="flex justify-between space-x-4">
-    //       <Button asChild className="flex-1">
-    //         <Link href="/case-simulator-selection">
-    //           Case Simulator
-    //         </Link>
-    //       </Button>
-    //       <Button asChild className="flex-1">
-    //         <Link href="/pdf-upload">
-    //           Review Literature
-    //         </Link>
-    //       </Button>
-    //     </div>
-    //   </Card>
-    // </div>
-  // );
+  const { isLoaded, isSignedIn, user } = useUser();
+
+  // Wait for the user data to load
+  if (!isLoaded) {
+    return null; // or a loading spinner
+  }
+
+  // Check if user is signed in
+  if (!isSignedIn) {
+    redirect('/sign-in');
+  }
+
+  // Now we can safely access user properties
+  console.log('User ID:', user?.id);
+  console.log('User Role:', user?.publicMetadata?.role);
+
+  if (user?.publicMetadata?.role === "therapist") {
+    redirect("/therapy-tutorials");
+  } else {
+    redirect("/case-simulator-selection");
+  }
 };
 
 export default Home;
