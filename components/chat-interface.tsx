@@ -31,7 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   };
 
   const { messages: rawMessages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat-openai',
+    api: '/api/chat-anthropic',
     initialMessages: [
       { role: 'system', content: prompt, id: 'system' },
       { role: 'assistant', content: 'Hello, ready to get started?', id: 'assistant' }

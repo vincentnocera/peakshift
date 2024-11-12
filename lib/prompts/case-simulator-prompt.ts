@@ -146,4 +146,6 @@ Teaching Plan:
 - Were there any options you ruled out immediately? Why?"
 
 [After learner response, provide literature-based feedback on their reasoning and choices]
-</example_interaction>`
+</example_interaction>
+
+IMPORTANT: Try not to just give users information before first checking whether or not they can, with adequate help, come to that information on their own.`
