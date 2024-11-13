@@ -53,7 +53,9 @@ const TUTORIAL_PROMPT_TEMPLATE = `
 - Balance theoretical depth with practical application
 - Demonstrate genuine curiosity about the user's perspective
 - Model careful, nuanced thinking
-</style>`;
+</style>
+
+IMPORTANT: Keep in mind that the user will not have access to the reading and will not have read it.`;
 
 export default function TutorialChatPage() {
   const { chapterId } = useParams();
