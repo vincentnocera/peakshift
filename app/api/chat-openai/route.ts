@@ -29,6 +29,12 @@ export async function POST(req: Request) {
     model: openai('gpt-4o'),
     messages: convertToCoreMessages(messagesWithSystem),
     temperature: 1,
+    onFinish: (metadata) => {
+      console.log('Cache metrics:', {
+        usage: metadata.usage,
+        cachedPromptTokens: metadata.experimental_providerMetadata?.openai?.cachedPromptTokens,
+      });
+    }
   });
 
   return result.toDataStreamResponse();

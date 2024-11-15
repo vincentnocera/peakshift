@@ -1,4 +1,4 @@
-import { convertToCoreMessages, streamText } from "ai";
+import { streamText } from "ai";
 import { anthropic } from '@ai-sdk/anthropic';
 
 export const maxDuration = 30;
@@ -35,8 +35,12 @@ export async function POST(req: Request) {
     model: anthropic('claude-3-5-sonnet-20241022', {
       cacheControl: true
     }),
-    messages: convertToCoreMessages(messagesWithCache),
+    messages: messagesWithCache,
     temperature: 1,
+    onFinish: (metadata) => {
+      console.log('Cache metrics:', metadata.experimental_providerMetadata?.anthropic);
+      // Will show something like: { cacheCreationInputTokens: X, cacheReadInputTokens: Y }
+    }
   });
 
   return result.toDataStreamResponse();

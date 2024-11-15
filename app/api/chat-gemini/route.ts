@@ -1,6 +1,6 @@
 import { convertToCoreMessages, streamText } from "ai";
 import { google } from "@ai-sdk/google";
-import { GoogleAICacheManager } from '@google/generative-ai/server';
+import { GoogleAICacheManager } from "@google/generative-ai/server";
 
 export const maxDuration = 30;
 export const runtime = "nodejs";
@@ -8,11 +8,6 @@ export const runtime = "nodejs";
 if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
   throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not defined');
 }
-
-// Initialize cache manager with API key
-const cacheManager = new GoogleAICacheManager(
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY
-);
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -26,51 +21,41 @@ export async function POST(req: Request) {
   const prompt = systemMessage?.content || "";
   const userMessages = messages.filter((msg) => msg.role !== "system");
 
-  // Configure the model options based on whether we have a system message
-  const modelOptions: any = {
-    temperature: 1,
-  };
+  const cacheManager = new GoogleAICacheManager(
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY!
+  );
 
-  if (prompt) {
-    try {
-      // First check if we already have a cache for this prompt
-      const existingCache = await cacheManager.list();
-      console.log('Existing caches:', existingCache);
+  type GoogleModelCacheableId = 
+  | 'models/gemini-1.5-flash-002'
+  | 'models/gemini-1.5-pro-002';
 
-      // Only create new cache if we don't have one
-      if (Object.keys(existingCache || {}).length === 0) {
-        const { name } = await cacheManager.create({
-          model: 'models/gemini-1.5-flash-002',
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }],
-            },
-          ],
-          systemInstruction: prompt,
-          ttlSeconds: 30,
-        });
-        console.log('New cache created with name:', name);
-        modelOptions.cachedContent = name;
-      } else {
-        const firstCache = Object.values(existingCache || {})[0];
-        console.log('Using existing cache:', firstCache);
-        modelOptions.cachedContent = firstCache;
-      }
+  const model: GoogleModelCacheableId = 'models/gemini-1.5-flash-002';
 
-      // Try to retrieve the cached content to verify it exists
-      const cached = await cacheManager.get(modelOptions.cachedContent!);
-      console.log('Cache content:', cached);
-      console.log('Cache retrieved successfully:', !!cached);
-    } catch (error) {
-      console.error('Caching error:', error);
-      // Continue without cache if there's an error
-    }
-  }
+  const { name: cachedContent } = await cacheManager.create({
+    model,
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }]
+      },
+      ...userMessages.map(({ role, content }) => ({
+        role: role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: content }]
+      }))
+    ],
+    ttlSeconds: 60 * 10
+  });
 
   const result = await streamText({
-    model: google("gemini-1.5-flash-002", modelOptions),
+    model: google("gemini-1.5-flash-002", {cachedContent}),
     messages: convertToCoreMessages(userMessages),
+    temperature: 1,
+    onFinish: (metadata) => {
+      console.log('Cache metrics:', {
+        usage: metadata.usage,
+        cachedContent
+      });
+    }
   });
 
   return result.toDataStreamResponse();
