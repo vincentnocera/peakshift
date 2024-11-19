@@ -189,7 +189,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
             recorder.stop();
             setIsRecording(false);
           }
-        }, 60000);
+        }, 120000);
       } catch (error) {
         console.error('Error accessing microphone:', error);
       }
