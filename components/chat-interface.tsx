@@ -49,7 +49,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     .map(message => ({
       ...message,
       content: cleanMessageContent(message.content)
-    }));
+    }))
+    .filter(message => message.content.length > 0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -212,8 +213,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     } else {
       const latestMessage = rawMessages[rawMessages.length - 1];
       if (latestMessage?.role === 'assistant') {
-        // Only show loading if there's no displayable content yet
-        setShowLoadingIndicator(!hasDisplayableContent(latestMessage.content));
+        // Hide loading indicator as soon as we have any cleaned content
+        const cleanedContent = cleanMessageContent(latestMessage.content);
+        setShowLoadingIndicator(!cleanedContent);
       } else {
         setShowLoadingIndicator(true);
       }
