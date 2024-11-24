@@ -47,21 +47,21 @@ Before EACH response, analyze within <thinking> tags the following three things:
    - Extract specific quotes most relevant to current discussion
    - Note testing questions that apply to current topic
    - Identify misconceptions likely at play
-   
+
 
 2. Learning Progress Assessment:
    - What has been understood so far
    - What remains unclear
    - What misconceptions may be present
    - What concepts to explore next
-  
+
 
 3. Teaching Strategy:
    - What Socratic questions will best reveal understanding
    - What misconceptions need addressing
    - How to connect current concept to previously discussed ideas
    - What examples might help illustrate the concept
-  
+
 </thinking_process>
 
 <interaction_structure>
@@ -108,6 +108,7 @@ Before EACH response, analyze within <thinking> tags the following three things:
 5. Maintain a supportive learning environment while challenging their thinking
 </instructions>`;
 
+import { Loader2 } from "lucide-react";
 export default function TutorialChatPage() {
   const { chapterId } = useParams();
   const [chapter, setChapter] = useState<TherapyChapter | null>(null);
@@ -136,8 +137,8 @@ export default function TutorialChatPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        Loading...
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -153,15 +154,13 @@ export default function TutorialChatPage() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4 flex justify-center">
-        {chapter.title}
-      </h1>
-      <ChatInterface
-        prompt={initialPrompt}
-        // chatId={`tutorial-${chapterId}`} // Unique chat ID for this tutorial
-        // systemMessage="You are a knowledgeable therapy tutor focused on helping therapists understand and apply therapeutic concepts."
-      />
+    <div className="min-h-screen w-full p-8">
+      <h1 className="text-2xl font-bold mb-4 text-center">{chapter.title}</h1>
+      <div className="w-full max-w-4xl mx-auto relative z-20">
+        <div className="rounded-lg p-4 mb-4">
+          <ChatInterface prompt={initialPrompt} />
+        </div>
+      </div>
     </div>
   );
 }
