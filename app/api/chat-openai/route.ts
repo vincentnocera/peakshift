@@ -1,5 +1,5 @@
 import { convertToCoreMessages, streamText } from "ai";
-import { openai } from '@ai-sdk/openai';
+import { openai } from "@ai-sdk/openai";
 
 export const maxDuration = 30;
 export const runtime = "edge";
@@ -21,20 +21,21 @@ export async function POST(req: Request) {
 
   // Create a new array with system message (simplified without cache control)
   const messagesWithSystem = [
-    { role: 'system' as const, content: prompt },
-    ...userMessages
+    { role: "system" as const, content: prompt },
+    ...userMessages,
   ];
 
   const result = await streamText({
-    model: openai('gpt-4o'),
+    model: openai("gpt-4o-2024-11-20"),
     messages: convertToCoreMessages(messagesWithSystem),
     temperature: 1,
     onFinish: (metadata) => {
-      console.log('Cache metrics:', {
+      console.log("Cache metrics:", {
         usage: metadata.usage,
-        cachedPromptTokens: metadata.experimental_providerMetadata?.openai?.cachedPromptTokens,
+        cachedPromptTokens:
+          metadata.experimental_providerMetadata?.openai?.cachedPromptTokens,
       });
-    }
+    },
   });
 
   return result.toDataStreamResponse();

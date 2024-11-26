@@ -37,7 +37,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     handleSubmit,
     isLoading,
   } = useChat({
-    api: "/api/chat-anthropic",
+    api: "/api/chat-anthropic ",
     initialMessages: [
       { role: "system", content: prompt, id: "system" },
       {
