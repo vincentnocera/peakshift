@@ -20,6 +20,15 @@ export interface TherapyChapter {
   dateAdded: string;
 }
 
+export interface Concept {
+  id: string;
+  chapterId: string;
+  title: string;
+  content: string;
+  orderIndex: number;
+  dateAdded: string;
+}
+
 // Book management functions
 export async function createBook(
   book: Omit<TherapyBook, "id" | "dateAdded">,
@@ -142,4 +151,36 @@ export async function getChapter(
     return null;
   }
   return chapter as TherapyChapter;
+}
+
+// Concept management functions
+export async function createConcept(concept: Omit<Concept, "id" | "dateAdded">): Promise<Concept> {
+  const id = nanoid()
+  const newConcept: Concept = {
+    ...concept,
+    id,
+    dateAdded: new Date().toISOString()
+  }
+
+  await kv.set(`concept:${id}`, newConcept)
+  return newConcept
+}
+
+export async function getConceptsByChapterId(chapterId: string): Promise<Concept[]> {
+  const keys = await kv.keys("concept:*")
+  const concepts = await Promise.all(keys.map(key => kv.get(key)))
+
+  return concepts
+    .filter((concept): concept is Concept =>
+      concept !== null &&
+      typeof concept === "object" &&
+      "chapterId" in concept &&
+      concept.chapterId === chapterId
+    )
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+}
+
+export async function deleteConcept(id: string): Promise<boolean> {
+  const deleted = await kv.del(`concept:${id}`)
+  return deleted === 1
 }

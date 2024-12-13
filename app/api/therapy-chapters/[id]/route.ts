@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server'
-import { deleteChapter } from '@/lib/therapy-tutorials'
+import { deleteChapter, getChaptersByBookId } from '@/lib/therapy-tutorials'
 import { auth } from '@clerk/nextjs/server'
 import { clerkClient } from '@clerk/nextjs/server'
 
 console.log('Dynamic route handler registered for therapy-chapters/[id]')
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const bookId = params.id
+    const chapters = await getChaptersByBookId(bookId)
+    return NextResponse.json(chapters)
+  } catch (error) {
+    console.error('Error fetching chapters:', error)
+    return new NextResponse('Internal Server Error', { status: 500 })
+  }
+}
 
 export async function DELETE(request: Request) {
   try {
