@@ -5,12 +5,11 @@ import { clerkClient } from '@clerk/nextjs/server'
 
 console.log('Dynamic route handler registered for therapy-chapters/[id]')
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
   try {
-    const bookId = params.id
+    const url = new URL(request.url)
+    const pathSegments = url.pathname.split('/')
+    const bookId = pathSegments[pathSegments.length - 1]
     const chapters = await getChaptersByBookId(bookId)
     return NextResponse.json(chapters)
   } catch (error) {

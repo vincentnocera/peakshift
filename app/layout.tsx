@@ -46,9 +46,6 @@ export default function RootLayout({
                 <Button variant="ghost" asChild>
                   <Link href="/">Home</Link>
                 </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/flashcards">Flashcards</Link>
-                </Button>
               </div>
               <ThemeChanger />
             </header>

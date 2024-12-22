@@ -2,7 +2,6 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useChat } from "ai/react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Mic, Loader2 } from "lucide-react";
@@ -235,9 +234,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   }, [isLoading, rawMessages]);
 
   return (
-    // Add min-h-[600px] to give a good starting height
-    <Card className="flex flex-col h-full min-h-[600px]">
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto space-y-4 mb-[100px] pt-6 px-4">
         {displayMessages.map((message) => (
           <div
             key={message.id}
@@ -283,44 +281,46 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
           </div>
         )}
         <div ref={messagesEndRef} />
-      </CardContent>
-      <CardFooter className="p-4">
-        <form onSubmit={handleFormSubmit} className="flex w-full">
-          <div className="relative flex-grow">
-            <Textarea
-              ref={inputRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message here..."
-              disabled={isLoading}
-              className="w-full pr-24 resize-none"
-              rows={3}
-            />
-            <div className="absolute right-2 bottom-2 flex gap-2">
-              <Button
-                type="button"
-                size="icon"
-                onClick={handleRecording}
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-background z-[5]">
+        <div className="w-full max-w-4xl mx-auto p-4">
+          <form onSubmit={handleFormSubmit} className="flex w-full">
+            <div className="relative flex-grow">
+              <Textarea
+                ref={inputRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message here..."
                 disabled={isLoading}
-                className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-              >
-                <Mic className="h-5 w-5" />
-              </Button>
-              <Button type="submit" size="icon" disabled={isLoading}>
-                <Send className="h-5 w-5" />
-              </Button>
+                className="w-full pr-24 resize-none"
+                rows={3}
+              />
+              <div className="absolute right-2 bottom-2 flex gap-2">
+                <Button
+                  type="button"
+                  size="icon"
+                  onClick={handleRecording}
+                  disabled={isLoading}
+                  className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+                <Button type="submit" size="icon" disabled={isLoading}>
+                  <Send className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
-          </div>
-        </form>
-      </CardFooter>
-    </Card>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 

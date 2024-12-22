@@ -56,12 +56,8 @@ const CaseSimulation = () => {
 
   return (
     <div className="min-h-screen w-full p-8">
-      <h1 className="text-2xl font-bold mb-4 text-center">Case Simulation</h1>
-      
-      <div className="w-full max-w-4xl mx-auto relative z-20">
-        <div className="rounded-lg p-4 mb-4">
-          <ChatInterface prompt={promptWithArticle} />
-        </div>
+      <div className="w-full max-w-4xl mx-auto">
+        <ChatInterface prompt={promptWithArticle} />
       </div>
     </div>
   );
