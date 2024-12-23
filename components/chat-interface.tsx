@@ -52,6 +52,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   if (latestMessage && latestMessage.role === "assistant") {
   }
 
+  // Add effect to log messages when streaming completes
+  useEffect(() => {
+    if (!isLoading && rawMessages.length > 0) {
+      console.log("Full message array after streaming:", rawMessages);
+    }
+  }, [isLoading, rawMessages]);
+
   // Clean the messages before displaying them
   const displayMessages = rawMessages
     .filter((message) => message.role !== "system")
