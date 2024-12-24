@@ -208,7 +208,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
 
   // NEW: For hover popover state, you can track hover for each message if needed.
   // Alternatively, you can do pure CSS :hover logic. Here’s a quick React approach:
-  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  // const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col h-full">
@@ -243,26 +243,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
               {/* NEW: Show an icon if there are quotes */}
               {message.role === "assistant" && message.quotes?.length > 0 && (
                 <div
-                  className="absolute bottom-2 right-2"
-                  onMouseEnter={() => setHoveredMessageId(message.id)}
-                  onMouseLeave={() => setHoveredMessageId(null)}
+                  className="absolute bottom-2 right-2 group"
                 >
                   <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                  {hoveredMessageId === message.id && (
-                    <div
-                      className="absolute right-0 bottom-full mb-2 bg-popover p-2 rounded shadow-md w-96 max-h-[300px] overflow-y-auto"
-                      style={{ zIndex: 1000 }}
-                    >
-                      {message.quotes.map((quote, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-popoverItem p-2 mb-1 rounded text-sm"
-                        >
-                          {quote}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div
+                    className="absolute right-0 bottom-full mb-2 bg-popover p-2 rounded shadow-md w-96 max-h-[80vh] overflow-y-auto opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out hover:!opacity-100 hover:!visible"
+                    style={{ zIndex: 1000, transitionDelay: '75ms', transitionProperty: 'opacity, visibility' }}
+                  >
+                    {message.quotes.map((quote, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-popoverItem p-2 mb-1 rounded text-sm"
+                      >
+                        {quote}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
