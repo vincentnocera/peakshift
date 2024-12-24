@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { useChat } from "ai/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Loader2 } from "lucide-react";
+import { Send, Mic, Loader2, Info } from "lucide-react"; // NEW: import an icon (Info, etc.)
 import ReactMarkdown from "react-markdown";
 
 interface ChatInterfaceProps {
@@ -12,20 +12,32 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
-  // Helper function to clean teaching strategy tags and handle incomplete sections
+  // NEW: function to extract <quote>...<quote> from the <thinking> section
+  const extractQuotes = (content: string) => {
+    const quotes: string[] = [];
+    const thinkingMatches = content.match(/<thinking>([\s\S]*?)<\/thinking>/g) || [];
+
+    thinkingMatches.forEach((thinkingBlock) => {
+      const quoteMatches = thinkingBlock.match(/<quote>([\s\S]*?)<\/quote>/g) || [];
+      quoteMatches.forEach((qm) => {
+        const captured = qm.replace(/<\/?quote>/g, "").trim();
+        if (captured) quotes.push(captured);
+      });
+    });
+    return quotes;
+  };
+
+  // Extended cleaning function that now also extracts quotes
   const cleanMessageContent = (content: string) => {
     // Find the last complete teaching strategy section
     const lastCompleteTagIndex = content.lastIndexOf("</thinking>");
-
     if (lastCompleteTagIndex === -1) {
-      // If there's an opening tag but no closing tag, only show content before the opening tag
       const openingTagIndex = content.lastIndexOf("<thinking>");
       if (openingTagIndex !== -1) {
         content = content.substring(0, openingTagIndex);
       }
     }
-
-    // Remove all complete teaching strategy sections
+    // Remove all <thinking> sections entirely
     return content.replace(/<thinking>[\s\S]*?<\/thinking>/g, "").trim();
   };
 
@@ -35,73 +47,67 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     handleInputChange,
     handleSubmit,
     isLoading,
+    // setMessages
   } = useChat({
     api: "/api/chat-gemini",
     initialMessages: [
       { role: "system", content: prompt, id: "system" },
-      {
-        role: "assistant",
-        content: "Hello, ready to get started?",
-        id: "assistant",
-      },
+      { role: "assistant", content: "Hello! Let me know when you're ready to start.", id: "assistant" },
     ],
   });
 
-  // Log the latest message whenever rawMessages changes
+  useEffect(() => {
+    if (rawMessages.length === 1) {
+      handleSubmit(new Event("submit") as any);
+    }
+  }, []);
+
   const latestMessage = rawMessages[rawMessages.length - 1];
   if (latestMessage && latestMessage.role === "assistant") {
   }
 
-  // Add effect to log messages when streaming completes
   useEffect(() => {
     if (!isLoading && rawMessages.length > 0) {
       console.log("Full message array after streaming:", rawMessages);
     }
   }, [isLoading, rawMessages]);
 
-  // Clean the messages before displaying them
+  // NEW: transform messages to include .quotes
   const displayMessages = rawMessages
     .filter((message) => message.role !== "system")
-    .map((message) => ({
-      ...message,
-      content: cleanMessageContent(message.content),
-    }))
+    .map((message) => {
+      // Extract quotes
+      const quotes = message.role === "assistant" ? extractQuotes(message.content) : [];
+      const cleanedContent = cleanMessageContent(message.content);
+      return { ...message, content: cleanedContent, quotes };
+    })
     .filter((message) => message.content.length > 0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Modify handleSubmit to stop recording
   const handleFormSubmit = (e: React.FormEvent) => {
     // Stop any ongoing recording
     if (isRecording && mediaRecorder) {
       mediaRecorder.stop();
       setIsRecording(false);
-      if (recordingTimeout.current) {
-        clearTimeout(recordingTimeout.current);
-      }
-      // Clean up the media stream
+      if (recordingTimeout.current) clearTimeout(recordingTimeout.current);
       mediaRecorder.stream.getTracks().forEach((track) => track.stop());
     }
-    // Call the original handleSubmit
     handleSubmit(e);
   };
 
-  // Update the form and keyboard handler to use the new submit function
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      // Stop any ongoing recording first
       if (isRecording && mediaRecorder) {
         mediaRecorder.stop();
         setIsRecording(false);
         if (recordingTimeout.current) {
           clearTimeout(recordingTimeout.current);
         }
-        // Clean up the media stream
         mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       }
-      // Submit the form
       handleSubmit(e as React.FormEvent);
     }
   };
@@ -116,93 +122,62 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     }
   }, [isLoading]);
 
-  // Add new state for recording
+  // State for recording logic
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null,
-  );
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const recordingTimeout = useRef<NodeJS.Timeout>();
 
-  // Add new function to handle recording
   const handleRecording = async () => {
-    // Immediately blur the button to prevent it from catching Enter key
     (document.activeElement as HTMLElement)?.blur();
-
     if (isRecording) {
       mediaRecorder?.stop();
       setIsRecording(false);
-      if (recordingTimeout.current) {
-        clearTimeout(recordingTimeout.current);
-      }
-      // Clean up the media stream
+      if (recordingTimeout.current) clearTimeout(recordingTimeout.current);
       if (mediaRecorder) {
         mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       }
-      // Focus the text input after stopping recording
       inputRef.current?.focus();
     } else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
-            channelCount: 1, // mono
-            sampleRate: 16000, // 16 kHz
+            channelCount: 1,
+            sampleRate: 16000,
             echoCancellation: true,
             noiseSuppression: true,
           },
         });
-
-        // Try to use a more efficient format
         const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
           ? "audio/webm;codecs=opus"
           : "audio/webm";
-
         const recorder = new MediaRecorder(stream, {
           mimeType,
-          audioBitsPerSecond: 16000, // Reduced from 16000 * 16
+          audioBitsPerSecond: 16000,
         });
-
         const audioChunks: Blob[] = [];
-
         recorder.ondataavailable = (event) => {
           audioChunks.push(event.data);
         };
-
         recorder.onstop = async () => {
           const audioBlob = new Blob(audioChunks, { type: mimeType });
-          console.log("Audio blob size:", audioBlob.size, "bytes");
-
           try {
             const formData = new FormData();
-            formData.append("audio", audioBlob, "audio.webm"); // Changed extension to match format
-
-            // Send to our API route
+            formData.append("audio", audioBlob, "audio.webm");
             const response = await fetch("/api/transcribe", {
               method: "POST",
               body: formData,
             });
-
-            if (!response.ok) {
-              throw new Error("Transcription failed");
-            }
-
+            if (!response.ok) throw new Error("Transcription failed");
             const data = await response.json();
-
-            // Update the input field with the transcribed text
             handleInputChange({ target: { value: data.text } } as any);
           } catch (error) {
             console.error("Error transcribing audio:", error);
-            // You might want to show an error toast/notification here
           }
-
-          // Clean up
           stream.getTracks().forEach((track) => track.stop());
         };
-
         setMediaRecorder(recorder);
         recorder.start();
         setIsRecording(true);
-
-        // Set timeout for 1 minute
         recordingTimeout.current = setTimeout(() => {
           if (recorder.state === "recording") {
             recorder.stop();
@@ -215,23 +190,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     }
   };
 
-  // Add this new function to check if the latest message has displayable content
-  // const hasDisplayableContent = (content: string) => {
-  //   // If there's any content after removing teaching strategy tags, we have displayable content
-  //   return cleanMessageContent(content).trim().length > 0;
-  // };
-
-  // Add state to track if we should show the loading indicator
+  // Loading indicator logic
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-
-  // Update loading indicator whenever messages or loading state changes
   useEffect(() => {
     if (!isLoading) {
       setShowLoadingIndicator(false);
     } else {
       const latestMessage = rawMessages[rawMessages.length - 1];
       if (latestMessage?.role === "assistant") {
-        // Hide loading indicator as soon as we have any cleaned content
         const cleanedContent = cleanMessageContent(latestMessage.content);
         setShowLoadingIndicator(!cleanedContent);
       } else {
@@ -239,6 +205,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
       }
     }
   }, [isLoading, rawMessages]);
+
+  // NEW: For hover popover state, you can track hover for each message if needed.
+  // Alternatively, you can do pure CSS :hover logic. Here’s a quick React approach:
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col h-full">
@@ -249,37 +219,59 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
             className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[80%] p-3 rounded-lg break-words ${
-                message.role === "user"
+              className={`
+                ${message.role === "user" ? "max-w-[80%]" : "max-w-full"}
+                p-3 rounded-lg break-words relative
+                ${message.role === "user"
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground"
-              }`}
+                }
+              `}
             >
               <ReactMarkdown
                 className="prose prose-sm dark:prose-invert space-y-4"
                 components={{
-                  p: ({ children }) => (
-                    <p className="mb-6 last:mb-0">{children}</p>
-                  ),
-                  h1: ({ children }) => (
-                    <h1 className="mt-8 mb-4">{children}</h1>
-                  ),
-                  h2: ({ children }) => (
-                    <h2 className="mt-8 mb-4">{children}</h2>
-                  ),
-                  h3: ({ children }) => (
-                    <h3 className="mt-8 mb-4">{children}</h3>
-                  ),
+                  p: ({ children }) => <p className="mb-6 last:mb-0">{children}</p>,
+                  h1: ({ children }) => <h1 className="mt-8 mb-4">{children}</h1>,
+                  h2: ({ children }) => <h2 className="mt-8 mb-4">{children}</h2>,
+                  h3: ({ children }) => <h3 className="mt-8 mb-4">{children}</h3>,
                 }}
               >
                 {message.content}
               </ReactMarkdown>
+
+              {/* NEW: Show an icon if there are quotes */}
+              {message.role === "assistant" && message.quotes?.length > 0 && (
+                <div
+                  className="absolute bottom-2 right-2"
+                  onMouseEnter={() => setHoveredMessageId(message.id)}
+                  onMouseLeave={() => setHoveredMessageId(null)}
+                >
+                  <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                  {hoveredMessageId === message.id && (
+                    <div
+                      className="absolute right-0 bottom-full mb-2 bg-popover p-2 rounded shadow-md w-96 max-h-[300px] overflow-y-auto"
+                      style={{ zIndex: 1000 }}
+                    >
+                      {message.quotes.map((quote, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-popoverItem p-2 mb-1 rounded text-sm"
+                        >
+                          {quote}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
+
         {showLoadingIndicator && (
           <div className="flex justify-start">
-            <div className="max-w-[80%] p-3 rounded-lg break-words bg-secondary text-secondary-foreground">
+            <div className="max-w-[100%] p-3 rounded-lg break-words bg-secondary text-secondary-foreground">
               <div className="flex items-center space-x-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Thinking...</span>
@@ -289,6 +281,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
         )}
         <div ref={messagesEndRef} />
       </div>
+
       <div className="fixed bottom-0 left-0 right-0 bg-background z-[5]">
         <div className="w-full max-w-4xl mx-auto p-4">
           <form onSubmit={handleFormSubmit} className="flex w-full">
@@ -332,5 +325,3 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
 };
 
 export default ChatInterface;
-
-// TODO: let's just make sure when we are getting rid of the hidden teaching strategy tags that we are not removing that information from the information that the AI sees; we want it to be able to see its previous hidden thoughts on future thoughts
