@@ -4,15 +4,23 @@ import React, { useRef, useEffect, useState } from "react";
 import { useChat } from "ai/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Loader2, Info } from "lucide-react"; // NEW: import an icon (Info, etc.)
+import { Send, Mic, Loader2, Info } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useSearchParams } from 'next/navigation';
+import { createChatSession, updateChatSession } from '@/app/actions/chat-sessions';
+import { ChatMessage } from '@/types/chat';
 
 interface ChatInterfaceProps {
   prompt: string;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
-  // NEW: function to extract <quote>...<quote> from the <thinking> section
+  const searchParams = useSearchParams();
+  const [chatId, setChatId] = useState<string | null>(
+    searchParams.get('chatId')
+  );
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   const extractQuotes = (content: string) => {
     const quotes: string[] = [];
     const thinkingMatches = content.match(/<thinking>([\s\S]*?)<\/thinking>/g) || [];
@@ -27,9 +35,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     return quotes;
   };
 
-  // Extended cleaning function that now also extracts quotes
   const cleanMessageContent = (content: string) => {
-    // Find the last complete teaching strategy section
     const lastCompleteTagIndex = content.lastIndexOf("</thinking>");
     if (lastCompleteTagIndex === -1) {
       const openingTagIndex = content.lastIndexOf("<thinking>");
@@ -37,7 +43,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
         content = content.substring(0, openingTagIndex);
       }
     }
-    // Remove all <thinking> sections entirely
     return content.replace(/<thinking>[\s\S]*?<\/thinking>/g, "").trim();
   };
 
@@ -45,9 +50,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     messages: rawMessages,
     input,
     handleInputChange,
-    handleSubmit,
+    handleSubmit: originalHandleSubmit,
     isLoading,
-    // setMessages
   } = useChat({
     api: "/api/chat-gemini",
     initialMessages: [
@@ -56,27 +60,50 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     ],
   });
 
+  // Handle chat session creation only once at the start
   useEffect(() => {
-    if (rawMessages.length === 1) {
-      handleSubmit(new Event("submit") as any);
+    async function initializeChatSession() {
+      if (hasInitialized || chatId) {
+        return;
+      }
+
+      if (rawMessages.length >= 2) {
+        try {
+          const session = await createChatSession(rawMessages as ChatMessage[]);
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.set('chatId', session.id);
+          window.history.replaceState({}, '', newUrl.toString());
+
+          console.log('Successfully created chat session:', session.id);
+          setChatId(session.id);
+          setHasInitialized(true);
+        } catch (error) {
+          console.error('Error creating chat session:', error);
+          setHasInitialized(true);
+        }
+      }
     }
-  }, []);
 
-  const latestMessage = rawMessages[rawMessages.length - 1];
-  if (latestMessage && latestMessage.role === "assistant") {
-  }
+    initializeChatSession();
+  }, [chatId, hasInitialized, rawMessages]);
 
-  useEffect(() => {
-    if (!isLoading && rawMessages.length > 0) {
-      console.log("Full message array after streaming:", rawMessages);
+  // Handle message updates
+  const handleSubmit = async (e: React.FormEvent) => {
+    originalHandleSubmit(e);
+    
+    // Update the session after a new message
+    if (chatId) {
+      try {
+        await updateChatSession(chatId, rawMessages as ChatMessage[]);
+      } catch (error) {
+        console.error('Error updating chat session:', error);
+      }
     }
-  }, [isLoading, rawMessages]);
+  };
 
-  // NEW: transform messages to include .quotes
   const displayMessages = rawMessages
     .filter((message) => message.role !== "system")
     .map((message) => {
-      // Extract quotes
       const quotes = message.role === "assistant" ? extractQuotes(message.content) : [];
       const cleanedContent = cleanMessageContent(message.content);
       return { ...message, content: cleanedContent, quotes };
@@ -87,7 +114,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFormSubmit = (e: React.FormEvent) => {
-    // Stop any ongoing recording
     if (isRecording && mediaRecorder) {
       mediaRecorder.stop();
       setIsRecording(false);
@@ -122,7 +148,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     }
   }, [isLoading]);
 
-  // State for recording logic
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const recordingTimeout = useRef<NodeJS.Timeout>();
@@ -190,7 +215,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     }
   };
 
-  // Loading indicator logic
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   useEffect(() => {
     if (!isLoading) {
@@ -205,10 +229,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
       }
     }
   }, [isLoading, rawMessages]);
-
-  // NEW: For hover popover state, you can track hover for each message if needed.
-  // Alternatively, you can do pure CSS :hover logic. Here’s a quick React approach:
-  // const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col h-full">
@@ -240,7 +260,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
                 {message.content}
               </ReactMarkdown>
 
-              {/* NEW: Show an icon if there are quotes */}
               {message.role === "assistant" && message.quotes?.length > 0 && (
                 <div
                   className="absolute bottom-2 right-2 group"
