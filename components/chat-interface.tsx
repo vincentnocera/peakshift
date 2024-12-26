@@ -22,6 +22,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
   );
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  // Create a key that changes when chatId changes to force useChat to reset
+  const chatKey = chatId || 'new-chat';
+
+  const {
+    messages: rawMessages,
+    input,
+    handleInputChange,
+    handleSubmit: originalHandleSubmit,
+    isLoading,
+  } = useChat({
+    api: "/api/chat-gemini",
+    id: chatKey,
+    initialMessages: initialMessages || [
+      { role: "system", content: prompt, id: "system" },
+      { role: "assistant", content: "Hello! Let me know when you're ready to start.", id: "assistant" },
+    ],
+  });
+
+  // Update chatId whenever URL params change
+  useEffect(() => {
+    const newChatId = searchParams.get('chatId');
+    if (newChatId !== chatId) {
+      setChatId(newChatId);
+      setHasInitialized(newChatId !== null);
+    }
+  }, [searchParams, chatId]);
+
   const extractQuotes = (content: string) => {
     const quotes: string[] = [];
     const thinkingMatches = content.match(/<thinking>([\s\S]*?)<\/thinking>/g) || [];
@@ -46,20 +73,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
     }
     return content.replace(/<thinking>[\s\S]*?<\/thinking>/g, "").trim();
   };
-
-  const {
-    messages: rawMessages,
-    input,
-    handleInputChange,
-    handleSubmit: originalHandleSubmit,
-    isLoading,
-  } = useChat({
-    api: "/api/chat-gemini",
-    initialMessages: initialMessages || [
-      { role: "system", content: prompt, id: "system" },
-      { role: "assistant", content: "Hello! Let me know when you're ready to start.", id: "assistant" },
-    ],
-  });
 
   useEffect(() => {
     if (initialMessages) {
@@ -105,13 +118,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
     if (chatId) {
       try {
         const updatedSession = await updateChatSession(chatId, rawMessages as ChatMessage[]);
-        console.log('Updated chat session messages for chatId:', chatId);
-        console.log('Updated messages:', JSON.stringify(updatedSession.messages, null, 2));
+        console.log('Updated chat session messages:', JSON.stringify(updatedSession.messages, null, 2));
       } catch (error) {
         console.error('Error updating chat session:', error);
       }
     }
   };
+
+  // Save messages when component unmounts or chatId changes
+  useEffect(() => {
+    return () => {
+      if (chatId && rawMessages.length > 0) {
+        console.log('Saving messages before unmount/chat change:', rawMessages);
+        updateChatSession(chatId, rawMessages as ChatMessage[])
+          .then(updatedSession => {
+            console.log('Successfully saved messages before unmount/chat change:', 
+              JSON.stringify(updatedSession.messages, null, 2));
+          })
+          .catch(error => {
+            console.error('Error saving messages before unmount/chat change:', error);
+          });
+      }
+    };
+  }, [chatId, rawMessages]);
 
   const displayMessages = rawMessages
     .filter((message) => message.role !== "system")
