@@ -1,7 +1,7 @@
 "use client";
 
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar"
-import { Suspense } from "react"
+// import { Suspense } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { formatDistanceToNow } from "date-fns"
 import { useRouter } from "next/navigation"

@@ -11,7 +11,7 @@ import { ChatMessage } from "@/types/chat";
 const CaseSimulation = () => {
   const [article, setArticle] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [existingMessages, setExistingMessages] = useState<ChatMessage[] | null>(null);
+  const [existingMessages, setExistingMessages] = useState<ChatMessage[]>();
   const searchParams = useSearchParams();
   const chatId = searchParams.get('chatId');
 
