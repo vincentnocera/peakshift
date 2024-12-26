@@ -93,3 +93,13 @@ export async function getChatSession(chatId: string) {
 
   return typeof chat === 'string' ? JSON.parse(chat) : chat;
 }
+
+export async function deleteChatSession(chatId: string) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+
+  await kv.hdel(`user:${userId}:chats`, chatId);
+  return { success: true };
+}

@@ -6,19 +6,17 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { formatDistanceToNow } from "date-fns"
 import { useRouter } from "next/navigation"
 import { ChatSession } from "@/types/chat"
-import { getAllChatSessions } from "@/app/actions/chat-sessions"
+import { getAllChatSessions, deleteChatSession } from "@/app/actions/chat-sessions"
 import { useEffect, useState } from "react"
+import { X } from "lucide-react"
 
-// Create a separate component for the chat list
-function ChatList({ sessions }: { sessions: ChatSession[] }) {
+function ChatList({ sessions, onDelete }: { sessions: ChatSession[], onDelete: (id: string) => void }) {
   const router = useRouter();
   
-  // Be safe: filter out any sessions that don't have a valid createdAt
   const validSessions = sessions.filter(
     (s) => s && typeof s.createdAt === "string"
   );
 
-  // Sort sessions by date, most recent first
   const sortedSessions = [...validSessions].sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
@@ -33,11 +31,20 @@ function ChatList({ sessions }: { sessions: ChatSession[] }) {
     );
   }
 
+  const handleDelete = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    try {
+      await deleteChatSession(sessionId);
+      onDelete(sessionId);
+    } catch (error) {
+      console.error('Error deleting chat session:', error);
+    }
+  };
+
   return (
     <ScrollArea className="h-[calc(100vh-8rem)]">
       <div className="space-y-2">
         {sortedSessions.map((session) => {
-          // Safely handle missing messages
           const messagesArray = Array.isArray(session.messages)
             ? session.messages
             : [];
@@ -53,9 +60,9 @@ function ChatList({ sessions }: { sessions: ChatSession[] }) {
           return (
             <div
               key={session.id}
-              className="p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+              className="p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors relative group"
               onClick={() => {
-                router.push(`/chat/${session.id}`);
+                router.push(`/case-simulator/?chatId=${session.id}`);
               }}
             >
               <div className="text-sm font-medium">
@@ -66,6 +73,13 @@ function ChatList({ sessions }: { sessions: ChatSession[] }) {
               <div className="text-sm text-muted-foreground mt-1">
                 {preview}
               </div>
+              <button
+                onClick={(e) => handleDelete(e, session.id)}
+                className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                aria-label="Delete chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           );
         })}
@@ -74,7 +88,6 @@ function ChatList({ sessions }: { sessions: ChatSession[] }) {
   );
 }
 
-// Create a loading component
 function ChatListLoading() {
   return (
     <div className="text-sm text-muted-foreground p-4 text-center">
@@ -83,7 +96,6 @@ function ChatListLoading() {
   );
 }
 
-// Main AppSidebar component
 export function AppSidebar() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,11 +105,9 @@ export function AppSidebar() {
     async function loadSessions() {
       try {
         setLoading(true);
-        // getAllChatSessions throws if not authenticated
         const data = await getAllChatSessions();
         setSessions(Array.isArray(data) ? data : []);
       } catch (err) {
-        // If the user is not logged in or there's a server error, catch it here
         console.error("Error loading chat sessions:", err);
         setError(
           err instanceof Error
@@ -112,6 +122,10 @@ export function AppSidebar() {
     loadSessions();
   }, []);
 
+  const handleDelete = (deletedId: string) => {
+    setSessions(sessions.filter(session => session.id !== deletedId));
+  };
+
   return (
     <Sidebar className="bg-background border-r">
       <SidebarContent className="bg-background p-4">
@@ -123,7 +137,7 @@ export function AppSidebar() {
         ) : error ? (
           <div className="text-sm text-red-500 p-4 text-center">{error}</div>
         ) : (
-          <ChatList sessions={sessions} />
+          <ChatList sessions={sessions} onDelete={handleDelete} />
         )}
       </SidebarContent>
     </Sidebar>

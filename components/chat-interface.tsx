@@ -12,9 +12,10 @@ import { ChatMessage } from '@/types/chat';
 
 interface ChatInterfaceProps {
   prompt: string;
+  initialMessages?: ChatMessage[];
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }) => {
   const searchParams = useSearchParams();
   const [chatId, setChatId] = useState<string | null>(
     searchParams.get('chatId')
@@ -54,11 +55,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
     isLoading,
   } = useChat({
     api: "/api/chat-gemini",
-    initialMessages: [
+    initialMessages: initialMessages || [
       { role: "system", content: prompt, id: "system" },
       { role: "assistant", content: "Hello! Let me know when you're ready to start.", id: "assistant" },
     ],
   });
+
+  useEffect(() => {
+    if (initialMessages) {
+      console.log('Initial messages passed to ChatInterface:', initialMessages);
+    }
+  }, [initialMessages]);
 
   // Handle chat session creation only once at the start
   useEffect(() => {
@@ -91,10 +98,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     originalHandleSubmit(e);
     
+    // Debug log to see what chatId we're using
+    console.log('Current chatId being used for update:', chatId);
+    
     // Update the session after a new message
     if (chatId) {
       try {
-        await updateChatSession(chatId, rawMessages as ChatMessage[]);
+        const updatedSession = await updateChatSession(chatId, rawMessages as ChatMessage[]);
+        console.log('Updated chat session messages for chatId:', chatId);
+        console.log('Updated messages:', JSON.stringify(updatedSession.messages, null, 2));
       } catch (error) {
         console.error('Error updating chat session:', error);
       }
