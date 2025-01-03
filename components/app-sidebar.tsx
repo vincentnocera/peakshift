@@ -45,18 +45,6 @@ function ChatList({ sessions, onDelete }: { sessions: ChatSession[], onDelete: (
     <ScrollArea className="h-[calc(100vh-8rem)]">
       <div className="space-y-2">
         {sortedSessions.map((session) => {
-          const messagesArray = Array.isArray(session.messages)
-            ? session.messages
-            : [];
-
-          const previewMessage =
-            messagesArray.find((m) => m.role !== "system")?.content || "";
-
-          const preview =
-            previewMessage.length > 50
-              ? previewMessage.substring(0, 50) + "..."
-              : previewMessage;
-
           return (
             <div
               key={session.id}
@@ -69,9 +57,6 @@ function ChatList({ sessions, onDelete }: { sessions: ChatSession[], onDelete: (
                 {formatDistanceToNow(new Date(session.createdAt), {
                   addSuffix: true,
                 })}
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                {preview}
               </div>
               <button
                 onClick={(e) => handleDelete(e, session.id)}

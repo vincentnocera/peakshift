@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
+import { Home } from "lucide-react"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -41,15 +42,17 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <SidebarProvider>
+            <SidebarProvider defaultOpen={false}>
               <AppSidebar />
               <SidebarInset>
                 <div className="relative min-h-screen">
                   <header className="w-full flex items-center justify-between py-1.5 px-3 sticky top-0 bg-background z-10">
                     <div className="flex items-center gap-1" >
                       <UserButton />
-                      <Button variant="ghost" asChild>
-                        <Link href="/">Home</Link>
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href="/" aria-label="Home">
+                          <Home className="h-[1.2rem] w-[1.2rem]" />
+                        </Link>
                       </Button>
                     </div>
                     <ThemeChanger />
