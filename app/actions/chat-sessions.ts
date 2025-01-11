@@ -58,26 +58,31 @@ export async function updateChatSession(chatId: string, messages: ChatMessage[])
   return updatedSession;
 }
 
-export async function getAllChatSessions() {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error('Unauthorized');
+export async function getAllChatSessions(): Promise<ChatSession[]> {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return [];
+    }
+
+    const result = await kv.hgetall(`user:${userId}:chats`);
+    
+    // Handle null/undefined result from Redis
+    if (!result) {
+      return [];
+    }
+
+    return Object.entries(result).map(([id, data]) => {
+      const session = typeof data === 'string' ? JSON.parse(data) : data;
+      return {
+        id,
+        ...session
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching chat sessions:', error);
+    return [];
   }
-
-  console.log("userId in getAllChatSessions:", userId); // Debugging log
-
-  const sessions = await kv.hgetall(`user:${userId}:chats`);
-  console.log("sessions from KV:", sessions); // Debugging log
-
-  // Handle the case where sessions is undefined (no data found)
-  if (!sessions) {
-    return []; // Return an empty array
-  }
-
-  return Object.entries(sessions).map(([id, session]) => ({
-    id,
-    ...(typeof session === 'string' ? JSON.parse(session) : session)
-  }));
 }
 
 export async function getChatSession(chatId: string) {

@@ -6,24 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Mic, Loader2, Info } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { useSearchParams } from 'next/navigation';
-import { createChatSession, updateChatSession } from '@/app/actions/chat-sessions';
-import { ChatMessage } from '@/types/chat';
+import { useSearchParams, useRouter } from "next/navigation";
+import { ChatMessage } from "@/types/chat";
 
 interface ChatInterfaceProps {
   prompt: string;
   initialMessages?: ChatMessage[];
+  chatId: string;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  prompt,
+  initialMessages,
+  chatId: initialChatId,
+}) => {
   const searchParams = useSearchParams();
-  const [chatId, setChatId] = useState<string | null>(
-    searchParams.get('chatId')
-  );
-  const [hasInitialized, setHasInitialized] = useState(false);
-
-  // Create a key that changes when chatId changes to force useChat to reset
-  const chatKey = chatId || 'new-chat';
+  const router = useRouter();
+  const [chatId, setChatId] = useState<string | undefined>(initialChatId);
 
   const {
     messages: rawMessages,
@@ -33,28 +32,45 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
     isLoading,
   } = useChat({
     api: "/api/chat-gemini",
-    id: chatKey,
+    id: chatId || undefined,
     initialMessages: initialMessages || [
       { role: "system", content: prompt, id: "system" },
-      { role: "assistant", content: "Hello! Let me know when you're ready to start.", id: "assistant" },
+      {
+        role: "assistant",
+        content: "Hello! Let me know when you're ready to start.",
+        id: "assistant",
+      },
     ],
+    body: {
+      chatId,
+    },
+    onResponse: (response) => {
+      const chatIdHeader = response.headers.get('X-Chat-ID');
+      if (chatIdHeader && chatIdHeader !== chatId) {
+        setChatId(chatIdHeader);
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set("chatId", chatIdHeader);
+        router.replace(newUrl.toString());
+      }
+    },
   });
 
   // Update chatId whenever URL params change
   useEffect(() => {
-    const newChatId = searchParams.get('chatId');
-    if (newChatId !== chatId) {
+    const newChatId = searchParams.get("chatId");
+    if (newChatId && newChatId !== chatId) {
       setChatId(newChatId);
-      setHasInitialized(newChatId !== null);
     }
   }, [searchParams, chatId]);
 
   const extractQuotes = (content: string) => {
     const quotes: string[] = [];
-    const thinkingMatches = content.match(/<thinking>([\s\S]*?)<\/thinking>/g) || [];
+    const thinkingMatches =
+      content.match(/<thinking>([\s\S]*?)<\/thinking>/g) || [];
 
     thinkingMatches.forEach((thinkingBlock) => {
-      const quoteMatches = thinkingBlock.match(/<quote>([\s\S]*?)<\/quote>/g) || [];
+      const quoteMatches =
+        thinkingBlock.match(/<quote>([\s\S]*?)<\/quote>/g) || [];
       quoteMatches.forEach((qm) => {
         const captured = qm.replace(/<\/?quote>/g, "").trim();
         if (captured) quotes.push(captured);
@@ -76,76 +92,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
 
   useEffect(() => {
     if (initialMessages) {
-      console.log('Initial messages passed to ChatInterface:', initialMessages);
+      console.log("Initial messages passed to ChatInterface:", initialMessages);
     }
   }, [initialMessages]);
 
-  // Handle chat session creation only once at the start
-  useEffect(() => {
-    async function initializeChatSession() {
-      if (hasInitialized || chatId) {
-        return;
-      }
-
-      if (rawMessages.length >= 2) {
-        try {
-          const session = await createChatSession(rawMessages as ChatMessage[]);
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.set('chatId', session.id);
-          window.history.replaceState({}, '', newUrl.toString());
-
-          console.log('Successfully created chat session:', session.id);
-          setChatId(session.id);
-          setHasInitialized(true);
-        } catch (error) {
-          console.error('Error creating chat session:', error);
-          setHasInitialized(true);
-        }
-      }
-    }
-
-    initializeChatSession();
-  }, [chatId, hasInitialized, rawMessages]);
-
-  // Handle message updates
   const handleSubmit = async (e: React.FormEvent) => {
-    originalHandleSubmit(e);
-    
-    // Debug log to see what chatId we're using
-    console.log('Current chatId being used for update:', chatId);
-    
-    // Update the session after a new message
-    if (chatId) {
-      try {
-        const updatedSession = await updateChatSession(chatId, rawMessages as ChatMessage[]);
-        console.log('Updated chat session messages:', JSON.stringify(updatedSession.messages, null, 2));
-      } catch (error) {
-        console.error('Error updating chat session:', error);
-      }
+    if (isRecording && mediaRecorder) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      if (recordingTimeout.current) clearTimeout(recordingTimeout.current);
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
     }
+    originalHandleSubmit(e);
   };
-
-  // Save messages when component unmounts or chatId changes
-  useEffect(() => {
-    return () => {
-      if (chatId && rawMessages.length > 0) {
-        console.log('Saving messages before unmount/chat change:', rawMessages);
-        updateChatSession(chatId, rawMessages as ChatMessage[])
-          .then(updatedSession => {
-            console.log('Successfully saved messages before unmount/chat change:', 
-              JSON.stringify(updatedSession.messages, null, 2));
-          })
-          .catch(error => {
-            console.error('Error saving messages before unmount/chat change:', error);
-          });
-      }
-    };
-  }, [chatId, rawMessages]);
 
   const displayMessages = rawMessages
     .filter((message) => message.role !== "system")
     .map((message) => {
-      const quotes = message.role === "assistant" ? extractQuotes(message.content) : [];
+      const quotes =
+        message.role === "assistant" ? extractQuotes(message.content) : [];
       const cleanedContent = cleanMessageContent(message.content);
       return { ...message, content: cleanedContent, quotes };
     })
@@ -190,7 +155,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
   }, [isLoading]);
 
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null,
+  );
   const recordingTimeout = useRef<NodeJS.Timeout>();
 
   const handleRecording = async () => {
@@ -274,28 +241,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto space-y-4 mb-[100px] pt-6 px-4">
-        {displayMessages.map((message) => (
+        {displayMessages.map((message, index) => (
           <div
-            key={message.id}
+            key={`${message.id}-${index}`}
             className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
               className={`
                 ${message.role === "user" ? "max-w-[80%]" : "max-w-full"}
                 p-3 rounded-lg break-words relative
-                ${message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground"
+                ${
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground"
                 }
               `}
             >
               <ReactMarkdown
+                key={`md-${message.id}-${index}`}
                 className="prose prose-sm dark:prose-invert space-y-4"
                 components={{
-                  p: ({ children }) => <p className="mb-6 last:mb-0">{children}</p>,
-                  h1: ({ children }) => <h1 className="mt-8 mb-4">{children}</h1>,
-                  h2: ({ children }) => <h2 className="mt-8 mb-4">{children}</h2>,
-                  h3: ({ children }) => <h3 className="mt-8 mb-4">{children}</h3>,
+                  p: ({ children }) => (
+                    <p key={`p-${index}`} className="mb-6 last:mb-0">{children}</p>
+                  ),
+                  h1: ({ children }) => (
+                    <h1 key={`h1-${index}`} className="mt-8 mb-4">{children}</h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 key={`h2-${index}`} className="mt-8 mb-4">{children}</h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 key={`h3-${index}`} className="mt-8 mb-4">{children}</h3>
+                  ),
                 }}
               >
                 {message.content}
@@ -306,11 +283,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, initialMessages }
                   <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
                   <div
                     className="absolute right-0 bottom-full mb-2 bg-popover p-2 rounded shadow-md w-96 max-h-[40vh] overflow-y-auto opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out hover:!opacity-100 hover:!visible"
-                    style={{ zIndex: 1000, transitionDelay: '75ms', transitionProperty: 'opacity, visibility' }}
+                    style={{
+                      zIndex: 1000,
+                      transitionDelay: "75ms",
+                      transitionProperty: "opacity, visibility",
+                    }}
                   >
-                    {message.quotes.map((quote, idx) => (
+                    {message.quotes.map((quote, quoteIdx) => (
                       <div
-                        key={idx}
+                        key={`quote-${message.id}-${quoteIdx}`}
                         className="bg-popoverItem p-2 mb-1 last:mb-0 rounded text-sm"
                       >
                         {quote}

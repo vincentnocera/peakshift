@@ -78,6 +78,7 @@ const CaseSimulation = () => {
         <ChatInterface 
           prompt={promptWithArticle} 
           initialMessages={existingMessages}
+          chatId={chatId || ''}
         />
       </div>
     </div>

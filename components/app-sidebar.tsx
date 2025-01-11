@@ -9,6 +9,7 @@ import { ChatSession } from "@/types/chat"
 import { getAllChatSessions, deleteChatSession } from "@/app/actions/chat-sessions"
 import { useEffect, useState } from "react"
 import { X } from "lucide-react"
+// import { ClerkProvider } from '@clerk/nextjs'
 
 function ChatList({ sessions, onDelete }: { sessions: ChatSession[], onDelete: (id: string) => void }) {
   const router = useRouter();
@@ -87,24 +88,36 @@ export function AppSidebar() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    
     async function loadSessions() {
       try {
         setLoading(true);
         const data = await getAllChatSessions();
-        setSessions(Array.isArray(data) ? data : []);
+        if (mounted && Array.isArray(data)) {
+          setSessions(data);
+        }
       } catch (err) {
         console.error("Error loading chat sessions:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load chat history."
-        );
+        if (mounted) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load chat history."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadSessions();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleDelete = (deletedId: string) => {

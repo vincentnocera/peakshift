@@ -1,124 +1,76 @@
-## Flashcards
+**Overall Purpose**
 
-Description of MVP of flashcards functionality:
+The application is a web-based educational tool that uses large language models (LLMs) to simulate one-on-one tutoring sessions. It allows administrators to upload articles, which are then used as the basis for guided conversations with the LLM. The primary goal is to provide personalized, high-quality instruction that is more accessible and scalable than traditional tutoring.
 
--When user navigates to /flashcards, they are presented one flashcard at a time, starting with the front of the flashcard.
--User can click on the flashcard to flip it over to the back.
--The back of the flashcard (in addition to having the answer) will have a green thumbs up button on the bottom right and a red thumbs down button on the bottom left.
--We will implement a spaced repetition algorithm to make sure the user is shown the flashcards they got wrong sooner than the ones they got right.
--For example, if a user gets a flashcard right multiple times in a row, the interval between shows will be progressively increase at greater intervals each time.
--If the user clicks the thumbs down button, this interval between shows of that flashcard will be reset to the initial interval.
--Information about where each flashcard is in the spaced repetition cycle will be saved in the Vercel KV database along with the flashcard data.
+**Key Features**
 
-Later on, users will be able to:
-
--Edit the wording on the flashcards.
--Delete flashcards.
--Download flashcards as TSV file (with columns for front and back of flashcard, but no other data).
+1.  **User Authentication and Authorization:**
+    *   Users can sign in using Clerk authentication.
+    *   Only users with the "admin" role can add or delete specialties and subtopics.
 
 
-# Case Material Management System Specification
+2.  **Content Management:**
+    *   Administrators can create and manage educational content by defining specialties and subtopics.
+    *   Specialties and subtopics are stored in a key-value store (Vercel KV).
+    *   Administrators can upload articles associated with a specialty and subtopic.
+    *   Articles are stored in a key-value store (Vercel KV).
 
-## Database Schema (Vercel KV)
+3.  **Case Simulation:**
+    *   Users can select a specialty and subtopics to start a case simulation.
+    *   The application fetches a random article based on the selected criteria.
 
-### Articles
-{
-  "articles": {
-    "article:<uuid>": {
-      "id": "uuid",
-      "text": "string", 
-      "specialty": "string",
-      "subtopic": "string",
-      "dateAdded": "ISO timestamp"
-    }
-  }
-}
+4.  **Chat Interface:**
+    *   The application provides a chat interface for users to interact with the LLM.
+    *   The chat interface supports text input and voice input (transcription).
+    *   The chat interface displays messages from the user and the LLM.
+    *   The LLM's responses can include "thinking" blocks with quotes, which are extracted and displayed separately.
 
-### Specialties and Subtopics
-{
-  "specialties": {
-    "specialty:<name>": {
-      "name": "string",
-      "subtopics": ["string"]
-    }
-  }
-}
 
-## Key Features
+5.  **LLM Integration:**
+    *   The application supports multiple LLMs, including Google Gemini, Anthropic Claude, and OpenAI; currently only using Gemini.
+    *   The application uses the `ai` library to handle streaming responses from the LLMs.
+    *   The application uses the `@ai-sdk` library by Vercel to interface with the LLMs.
 
-### 1. Admin Article Management Interface
-- Protected route `/admin/articles`
-- Only accessible to users with admin role in Clerk
-- Features:
-  - Add new article form with:
-    - Text input (large text area)
-    - Specialty dropdown (existing or new)
-    - Subtopic dropdown (existing or new)
-  - List of existing articles with delete capability
-  - No edit functionality required initially
+6.  **Audio Transcription:**
+    *   The application uses Groq's transcription service to convert voice input to text.
 
-### 2. Case Simulation Selection
-- Enhanced version of existing `/case-simulation-selection` page
-- Two-tier dropdown system:
-  1. Specialty dropdown
-  2. Subtopic dropdown (enabled after specialty selection)
-- Multiple subtopic selection capability
-- "Select All" option for subtopics
-- Random selection from chosen subtopics when simulation starts
+7.  **UI Components:**
+    *   The application uses Radix UI for its UI components.
+    *   The application uses Tailwind CSS for styling.
+    *   The application supports light and dark themes.
 
-### 3. Article Integration with LLM
-- Selected article text will be incorporated into the LLM prompt
-- No tracking of previously used articles needed
+8.  **Data Types:**
+    *   The application defines several data types for processing status, chat messages, and chat sessions.
 
-## API Endpoints
+**Workflow**
 
-### Admin Routes
-POST /api/articles
-- Add new article
-- Requires admin role
+1.  An administrator logs in and adds specialties and subtopics.
+2.  An administrator uploads articles associated with a specialty and subtopic.
+3.  A user selects a specialty and subtopics to start a case simulation.
+4.  The application fetches a random article based on the selected criteria.
+5.  The application inserts the article into a prompt for the LLM.
+6.  The user engages in a chat with the LLM, which acts as a tutor.
+7.  The chat history is persisted.
 
-DELETE /api/articles/:id
-- Delete article
-- Requires admin role
+**Technology Stack**
 
-GET /api/specialties
-- Get list of all specialties and subtopics
-- Public route
+*   Next.js
+*   React
+*   TypeScript
+*   Tailwind CSS
+*   Radix UI/shadcn
+*   Vercel KV
+*   Clerk Authentication
+*   `ai` library
+*   `@ai-sdk` libraries
+*   Groq API
 
-POST /api/specialties
-- Add new specialty
-- Requires admin role
+**Future Features**
 
-POST /api/subtopics
-- Add new subtopic to specialty
-- Requires admin role
-
-### Public Routes
-GET /api/articles/random
-- Get random article based on selected specialty/subtopics
-- Public route
-
-## Implementation Phases
-
-1. Database Setup
-   - Set up Vercel KV schemas
-   - Create helper functions for article/specialty management
-
-2. Admin Interface
-   - Implement admin role checking with Clerk
-   - Create protected admin routes
-   - Build article management UI
-
-3. Case Simulation Enhancement
-   - Modify selection page to include new dropdown system
-   - Implement random article selection
-   - Integrate selected article with LLM prompt
-
-4. Testing & Deployment
-   - Test admin functionality
-   - Test case simulation with new article system
-   - Deploy to production
-
-## Literature Review
-
-To be described later.
+*   Create personalized learning features inclduing:
+    *  An assessment test for each specialty
+    *  A dashboard for users to see their progress, including areas of strength and areas of weakness
+    *  A feature which analyzes user's chat history and updates their learning progress
+    *  A feature which allows users to tweak the behavior of the LLM tutor
+    *  A feature which uses the user's progress to recommend specific subtopics and articles for them to practice with
+    *  A feature which alters the behavior of the LLM tutor regardless of specific article they are currently working on, to incorporate what the application has learned about the user's knowledge and learning style

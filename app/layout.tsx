@@ -23,7 +23,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Two Sigma Learning",
+  title: "Peak Shift",
   description: "Learn medicine effectively with AI",
   icons: {
     icon: "./favicon.ico",
