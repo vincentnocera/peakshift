@@ -2,7 +2,8 @@
 
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
-import { Switch } from "@/components/ui/switch"
+import { Moon, Sun } from "lucide-react"
+import { Button } from "./button"
 
 export function ThemeChanger() {
   const [mounted, setMounted] = useState(false)
@@ -17,11 +18,17 @@ export function ThemeChanger() {
   }
 
   return (
-    <Switch
-      checked={theme === "dark"}
-      onCheckedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
-      Dark Mode
-    </Switch>
+      {theme === "dark" ? (
+        <Moon className="h-5 w-5" />
+      ) : (
+        <Sun className="h-5 w-5" />
+      )}
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   )
 }
