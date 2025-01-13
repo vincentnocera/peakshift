@@ -7,23 +7,28 @@ import { Button } from "./button"
 
 export function ThemeChanger() {
   const [mounted, setMounted] = useState(false)
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   if (!mounted) {
-    return null
+    return (
+      <Button variant="ghost" size="icon">
+        <div className="h-5 w-5" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    )
   }
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
-      {theme === "dark" ? (
+      {resolvedTheme === "dark" ? (
         <Moon className="h-5 w-5" />
       ) : (
         <Sun className="h-5 w-5" />

@@ -30,7 +30,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
       </ClerkLoading>
 
       <ClerkLoaded>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SidebarProvider defaultOpen={false}>
             <AppSidebar />
             <SidebarInset>
