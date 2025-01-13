@@ -80,14 +80,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const cleanMessageContent = (content: string) => {
-    const lastCompleteTagIndex = content.lastIndexOf("</thinking>");
-    if (lastCompleteTagIndex === -1) {
-      const openingTagIndex = content.lastIndexOf("<thinking>");
-      if (openingTagIndex !== -1) {
-        content = content.substring(0, openingTagIndex);
+    // let cleanedContent = content;
+    const segments = content.split('<thinking>');
+    
+    // If no thinking tags, just return the content
+    if (segments.length === 1) return content.trim();
+    
+    // Handle the first segment (before any thinking tags)
+    let result = segments[0];
+    
+    // Process each segment that started with a thinking tag
+    for (let i = 1; i < segments.length; i++) {
+      const segment = segments[i];
+      const closingTagIndex = segment.indexOf('</thinking>');
+      
+      if (closingTagIndex === -1) {
+        // If we don't find a closing tag, this is a partial tag in streaming
+        // Don't add anything from this segment yet
+        break;
       }
+      
+      // Add the content that comes after the closing tag
+      result += segment.substring(closingTagIndex + '</thinking>'.length);
     }
-    return content.replace(/<thinking>[\s\S]*?<\/thinking>/g, "").trim();
+    
+    return result.trim();
   };
 
   useEffect(() => {
