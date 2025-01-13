@@ -1,4 +1,4 @@
-import { convertToCoreMessages, streamText } from "ai";
+import { generateText, convertToCoreMessages } from "ai";
 import { google } from "@ai-sdk/google";
 import { updateChatSession, getChatSession, createChatSession } from "@/app/actions/chat-sessions";
 import { ChatMessage } from "@/types/chat";
@@ -26,78 +26,58 @@ export async function POST(req: Request) {
 
   try {
     if (chatId) {
-      // Get existing session if chatId is provided
       currentSession = await getChatSession(chatId);
     } else {
-      // Create new session with ONLY the system message
       const initialMessages = systemMessage ? [systemMessage] : [];
       currentSession = await createChatSession(initialMessages);
       chatId = currentSession.id;
     }
   } catch (error) {
     console.error("Error managing chat session:", error);
-    // If session retrieval fails, create a new one with ONLY system message
     const initialMessages = systemMessage ? [systemMessage] : [];
     currentSession = await createChatSession(initialMessages);
     chatId = currentSession.id;
   }
 
-  const result = await streamText({
+  const { text } = await generateText({
     model: google("gemini-2.0-flash-exp"),
     messages: convertToCoreMessages(nonSystemMessages),
     system: systemMessage?.content || "",
     temperature: 1,
-    onFinish: async ({ text }) => {
-      try {
-        // Get the most recent session state
-        const updatedSession = await getChatSession(chatId!);
-        
-        // Prepare the new messages to append
-        const newMessages = [
-          ...updatedSession.messages,
-          // Add the new user message if it's not already in the history
-          lastUserMessage,
-          // Add the assistant's response
-          {
-            role: "assistant",
-            content: text,
-            id: `assistant-${Date.now()}`,
-          },
-        ];
-
-        // Update the session with all messages
-        await updateChatSession(chatId!, newMessages);
-        
-        console.log("Chat session updated successfully:", {
-          chatId,
-          totalMessages: newMessages.length,
-        });
-      } catch (error) {
-        console.error("Failed to update chat session:", error);
-      }
-    },
   });
 
-  // Create a TransformStream to modify the response
-  const transformStream = new TransformStream({
-    transform(chunk, controller) {
-      // Pass through the chunk as-is
-      controller.enqueue(chunk);
-    },
-    flush(controller) {
-      // When the stream is done, append the chatId
-      controller.enqueue(`\n{"chatId":"${chatId}"}`);
-    },
-  });
+  try {
+    // Get the most recent session state
+    const updatedSession = await getChatSession(chatId!);
+    
+    // Prepare the new messages to append
+    const newMessages = [
+      ...updatedSession.messages,
+      lastUserMessage,
+      {
+        role: "assistant",
+        content: text,
+        id: `assistant-${Date.now()}`,
+      },
+    ];
 
-  // Get the response from streamText and pipe it through our transform
-  const response = result.toDataStreamResponse();
-  const { readable, writable } = transformStream;
-  response.body?.pipeTo(writable);
-  
-  return new Response(readable, {
+    // Update the session with all messages
+    await updateChatSession(chatId!, newMessages);
+    
+    console.log("Chat session updated successfully:", {
+      chatId,
+      totalMessages: newMessages.length,
+    });
+  } catch (error) {
+    console.error("Failed to update chat session:", error);
+  }
+
+  return new Response(JSON.stringify({ 
+    text,
+    chatId 
+  }), {
     headers: {
-      'Content-Type': 'text/plain',
+      'Content-Type': 'application/json',
       'X-Chat-ID': chatId!,
     },
   });
