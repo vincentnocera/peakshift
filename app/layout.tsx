@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import ClientRoot from "./ClientRoot";
+import { Analytics } from '@vercel/analytics/react';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -40,6 +41,7 @@ export default function RootLayout({
             <ClientRoot>{children}</ClientRoot>
           </SignedIn>
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
