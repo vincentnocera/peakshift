@@ -4,14 +4,16 @@ import { Sidebar, SidebarContent } from "@/components/ui/sidebar"
 // import { Suspense } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { formatDistanceToNow } from "date-fns"
-import { useRouter } from "next/navigation"
-import { ChatSession } from "@/types/chat"
-import { getAllChatSessions, deleteChatSession } from "@/app/actions/chat-sessions"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { ChatSessionPreview } from "@/types/chat"
+import { getAllChatSessionPreviews, deleteChatSession } from "@/app/actions/chat-sessions"
 import { useEffect, useState } from "react"
 import { X } from "lucide-react"
-// import { ClerkProvider } from '@clerk/nextjs'
+import { useAuth } from '@clerk/nextjs'
 
-function ChatList({ sessions, onDelete }: { sessions: ChatSession[], onDelete: (id: string) => void }) {
+// The AppSidebar component should refresh its list of chat sessions when the user is fully authenticated and also whenever the user starts a new chat session (as demarcated by a new chatId in the URL)
+
+function ChatList({ sessions, onDelete }: { sessions: ChatSessionPreview[], onDelete: (id: string) => void }) {
   const router = useRouter();
   
   const validSessions = sessions.filter(
@@ -83,9 +85,13 @@ function ChatListLoading() {
 }
 
 export function AppSidebar() {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [sessions, setSessions] = useState<ChatSessionPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isLoaded, userId } = useAuth();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const chatId = searchParams.get('chatId');
 
   useEffect(() => {
     let mounted = true;
@@ -93,7 +99,7 @@ export function AppSidebar() {
     async function loadSessions() {
       try {
         setLoading(true);
-        const data = await getAllChatSessions();
+        const data = await getAllChatSessionPreviews();
         console.log('Received chat sessions:', data);
         if (mounted && Array.isArray(data)) {
           setSessions(data);
@@ -114,12 +120,14 @@ export function AppSidebar() {
       }
     }
 
-    loadSessions();
+    if (isLoaded && userId) {
+      loadSessions();
+    }
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isLoaded, userId, pathname, chatId]);
 
   const handleDelete = (deletedId: string) => {
     setSessions(sessions.filter(session => session.id !== deletedId));

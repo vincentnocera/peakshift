@@ -8,7 +8,8 @@ We are converting from using api/routes to using actions.
 
 import { kv } from '@vercel/kv'
 import { auth } from '@clerk/nextjs/server'
-import { ChatSession, ChatMessage } from '@/types/chat'
+import { ChatSession, ChatMessage, ChatSessionPreview } from '@/types/chat'
+
 
 export async function createChatSession(messages: ChatMessage[]) {
   const { userId } = await auth();
@@ -58,7 +59,7 @@ export async function updateChatSession(chatId: string, messages: ChatMessage[])
   return updatedSession;
 }
 
-export async function getAllChatSessions(): Promise<ChatSession[]> {
+export async function getAllChatSessionPreviews(): Promise<ChatSessionPreview[]> {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -67,33 +68,32 @@ export async function getAllChatSessions(): Promise<ChatSession[]> {
 
     const result = await kv.hgetall(`user:${userId}:chats`);
     
-    // Handle null/undefined result from Redis
     if (!result) {
       return [];
     }
 
-    // More thorough validation and parsing
     return Object.entries(result)
       .map(([id, data]) => {
         try {
           const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-          // Ensure the session has all required fields
-          if (!parsed || !parsed.createdAt || !parsed.messages) {
+          if (!parsed || !parsed.createdAt) {
             console.error(`Invalid chat session data for ID ${id}:`, parsed);
             return null;
           }
+          // Only return minimal data needed for the sidebar
           return {
             id,
             userId,
             createdAt: parsed.createdAt,
-            messages: parsed.messages
+            // Optionally: first message or title if you want to show a preview
+            // title: parsed.messages[0]?.content.slice(0, 50) + '...'
           };
         } catch (e) {
           console.error(`Error parsing chat session ${id}:`, e);
           return null;
         }
       })
-      .filter((session): session is ChatSession => session !== null);
+      .filter((session): session is ChatSessionPreview => session !== null);
   } catch (error) {
     console.error('Error fetching chat sessions:', error);
     return [];

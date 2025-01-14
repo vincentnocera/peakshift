@@ -15,4 +15,11 @@ export interface ChatSession {
 // For the KV store structure
 export interface ChatSessionStore {
   [key: string]: ChatSession
+}
+
+export interface ChatSessionPreview {
+  id: string;
+  userId: string;
+  createdAt: string;
+  // title?: string; // Optional if you want to show a preview
 } 
