@@ -94,11 +94,12 @@ export function AppSidebar() {
       try {
         setLoading(true);
         const data = await getAllChatSessions();
+        console.log('Received chat sessions:', data);
         if (mounted && Array.isArray(data)) {
           setSessions(data);
         }
       } catch (err) {
-        console.error("Error loading chat sessions:", err);
+        console.error('Error loading chat sessions:', err);
         if (mounted) {
           setError(
             err instanceof Error

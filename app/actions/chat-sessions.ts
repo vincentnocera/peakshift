@@ -72,13 +72,28 @@ export async function getAllChatSessions(): Promise<ChatSession[]> {
       return [];
     }
 
-    return Object.entries(result).map(([id, data]) => {
-      const session = typeof data === 'string' ? JSON.parse(data) : data;
-      return {
-        id,
-        ...session
-      };
-    });
+    // More thorough validation and parsing
+    return Object.entries(result)
+      .map(([id, data]) => {
+        try {
+          const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+          // Ensure the session has all required fields
+          if (!parsed || !parsed.createdAt || !parsed.messages) {
+            console.error(`Invalid chat session data for ID ${id}:`, parsed);
+            return null;
+          }
+          return {
+            id,
+            userId,
+            createdAt: parsed.createdAt,
+            messages: parsed.messages
+          };
+        } catch (e) {
+          console.error(`Error parsing chat session ${id}:`, e);
+          return null;
+        }
+      })
+      .filter((session): session is ChatSession => session !== null);
   } catch (error) {
     console.error('Error fetching chat sessions:', error);
     return [];
